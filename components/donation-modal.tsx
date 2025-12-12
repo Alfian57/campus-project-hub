@@ -21,8 +21,8 @@ import { toast } from "sonner";
 const donationSchema = z.object({
   amount: z.coerce
     .number()
-    .min(10000, "Minimum donation is IDR 10,000")
-    .max(10000000, "Maximum donation is IDR 10,000,000"),
+    .min(10000, "Minimal donasi Rp10.000")
+    .max(10000000, "Maksimal donasi Rp10.000.000"),
 });
 
 type DonationFormData = z.infer<typeof donationSchema>;
@@ -78,7 +78,7 @@ export function DonationModal({
       const result = await createTransaction(projectId, data.amount);
 
       if (!result.success || !result.token) {
-        toast.error(result.error || "Failed to create payment");
+        toast.error(result.error || "Gagal membuat pembayaran");
         setIsProcessing(false);
         return;
       }
@@ -86,7 +86,7 @@ export function DonationModal({
       // Check if Snap is loaded
       if (!window.snap) {
         toast.error(
-          "Payment system not loaded. Please refresh and try again."
+          "Sistem pembayaran belum dimuat. Silakan refresh dan coba lagi."
         );
         setIsProcessing(false);
         return;
@@ -96,19 +96,19 @@ export function DonationModal({
       window.snap.pay(result.token, {
         onSuccess: (result) => {
           console.log("Payment success:", result);
-          toast.success("Thank you for supporting this project! 🎉");
+          toast.success("Terima kasih telah mendukung proyek ini! 🎉");
           setOpen(false);
           reset();
           setIsProcessing(false);
         },
         onPending: (result) => {
           console.log("Payment pending:", result);
-          toast.info("Payment is being processed...");
+          toast.info("Pembayaran sedang diproses...");
           setIsProcessing(false);
         },
         onError: (result) => {
           console.error("Payment error:", result);
-          toast.error("Payment failed. Please try again.");
+          toast.error("Pembayaran gagal. Silakan coba lagi.");
           setIsProcessing(false);
         },
         onClose: () => {
@@ -118,7 +118,7 @@ export function DonationModal({
       });
     } catch (error) {
       console.error("Donation error:", error);
-      toast.error("An error occurred. Please try again.");
+      toast.error("Terjadi kesalahan. Silakan coba lagi.");
       setIsProcessing(false);
     }
   };
@@ -132,7 +132,7 @@ export function DonationModal({
             className="border-blue-400 text-blue-600 hover:bg-blue-50 dark:border-blue-500 dark:text-blue-400 dark:hover:bg-blue-950"
           >
             <Coffee className="w-4 h-4 mr-2" />
-            Support Project
+            Dukung Proyek
           </Button>
         )}
       </DialogTrigger>
@@ -140,11 +140,11 @@ export function DonationModal({
         <DialogHeader>
           <DialogTitle className="text-2xl flex items-center gap-2">
             <Coffee className="w-6 h-6 text-blue-500" />
-            Support This Creator
+            Dukung Kreator Ini
           </DialogTitle>
           <DialogDescription>
-            Show your appreciation for <strong>{projectTitle}</strong> with a
-            donation.
+            Tunjukkan apresiasi Anda untuk <strong>{projectTitle}</strong> dengan
+            donasi.
           </DialogDescription>
         </DialogHeader>
 
@@ -154,7 +154,7 @@ export function DonationModal({
               htmlFor="amount"
               className="text-sm font-medium text-zinc-700 dark:text-zinc-300"
             >
-              Amount (IDR)
+              Jumlah (IDR)
             </label>
             <Input
               id="amount"
@@ -199,11 +199,11 @@ export function DonationModal({
             className="w-full bg-blue-500 hover:bg-blue-600 text-white font-semibold"
             size="lg"
           >
-            {isProcessing ? "Processing..." : "Proceed to Payment"}
+            {isProcessing ? "Memproses..." : "Lanjut ke Pembayaran"}
           </Button>
 
           <p className="text-xs text-zinc-500 dark:text-zinc-400 text-center">
-            Secure payment powered by Midtrans
+            Pembayaran aman didukung oleh Midtrans
           </p>
         </form>
       </DialogContent>

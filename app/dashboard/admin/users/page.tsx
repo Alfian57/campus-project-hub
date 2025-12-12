@@ -19,6 +19,12 @@ import { EditRoleModal } from "@/components/admin/edit-role-modal";
 import { User, UserRole } from "@/types/dashboard";
 import { toast } from "sonner";
 
+const roleLabels: Record<UserRole, string> = {
+  admin: "Admin",
+  moderator: "Moderator",
+  user: "Pengguna",
+};
+
 export default function UsersManagementPage() {
   const [users, setUsers] = useState<User[]>(mockUsers);
   const [searchQuery, setSearchQuery] = useState("");
@@ -47,7 +53,7 @@ export default function UsersManagementPage() {
         user.id === userId ? { ...user, status: "active" } : user
       )
     );
-    toast.success("User has been unblocked");
+    toast.success("Pengguna telah dibuka blokirnya");
   };
 
   const handleUpdateRole = (userId: string, newRole: UserRole) => {
@@ -57,9 +63,9 @@ export default function UsersManagementPage() {
   };
 
   const handleDeleteUser = (userId: string, userName: string) => {
-    if (confirm(`Are you sure you want to delete ${userName}? This action cannot be undone.`)) {
+    if (confirm(`Yakin ingin menghapus ${userName}? Tindakan ini tidak dapat dibatalkan.`)) {
       setUsers((prev) => prev.filter((user) => user.id !== userId));
-      toast.success(`User ${userName} has been deleted`);
+      toast.success(`Pengguna ${userName} telah dihapus`);
     }
   };
 
@@ -88,10 +94,10 @@ export default function UsersManagementPage() {
       {/* Header */}
       <div>
         <h1 className="text-3xl font-bold text-zinc-900 dark:text-zinc-50">
-          User Management
+          Manajemen Pengguna
         </h1>
         <p className="text-zinc-600 dark:text-zinc-400 mt-1">
-          Manage all platform users
+          Kelola semua pengguna platform
         </p>
       </div>
 
@@ -100,7 +106,7 @@ export default function UsersManagementPage() {
         <div className="relative flex-1 max-w-md">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500" />
           <Input
-            placeholder="Search by name, email, or university..."
+            placeholder="Cari berdasarkan nama, email, atau universitas..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="pl-10"
@@ -114,19 +120,19 @@ export default function UsersManagementPage() {
       {/* Stats */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div className="p-4 rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900">
-          <p className="text-sm text-zinc-600 dark:text-zinc-400">Total Users</p>
+          <p className="text-sm text-zinc-600 dark:text-zinc-400">Total Pengguna</p>
           <p className="text-2xl font-bold text-zinc-900 dark:text-zinc-50">
             {users.length}
           </p>
         </div>
         <div className="p-4 rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900">
-          <p className="text-sm text-zinc-600 dark:text-zinc-400">Active</p>
+          <p className="text-sm text-zinc-600 dark:text-zinc-400">Aktif</p>
           <p className="text-2xl font-bold text-green-600">
             {users.filter((u) => u.status === "active").length}
           </p>
         </div>
         <div className="p-4 rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900">
-          <p className="text-sm text-zinc-600 dark:text-zinc-400">Blocked</p>
+          <p className="text-sm text-zinc-600 dark:text-zinc-400">Diblokir</p>
           <p className="text-2xl font-bold text-red-600">
             {users.filter((u) => u.status === "blocked").length}
           </p>
@@ -138,13 +144,13 @@ export default function UsersManagementPage() {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>User</TableHead>
+              <TableHead>Pengguna</TableHead>
               <TableHead>Role</TableHead>
-              <TableHead>University</TableHead>
-              <TableHead>Projects</TableHead>
+              <TableHead>Universitas</TableHead>
+              <TableHead>Proyek</TableHead>
               <TableHead>Status</TableHead>
-              <TableHead>Joined</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
+              <TableHead>Bergabung</TableHead>
+              <TableHead className="text-right">Aksi</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -168,7 +174,7 @@ export default function UsersManagementPage() {
                 <TableCell>
                   <Badge className={getRoleBadge(user.role)}>
                     {user.role === "admin" && <Shield className="w-3 h-3 mr-1" />}
-                    {user.role}
+                    {roleLabels[user.role]}
                   </Badge>
                 </TableCell>
                 <TableCell>
@@ -186,7 +192,7 @@ export default function UsersManagementPage() {
                         : "bg-red-100 text-red-700 dark:bg-red-900/20 dark:text-red-400"
                     }
                   >
-                    {user.status}
+                    {user.status === "active" ? "Aktif" : "Diblokir"}
                   </Badge>
                 </TableCell>
                 <TableCell className="text-sm text-zinc-600 dark:text-zinc-400">
@@ -209,7 +215,7 @@ export default function UsersManagementPage() {
                         variant="ghost"
                         onClick={() => openBlockModal(user)}
                         className="hover:text-red-600"
-                        title="Block User"
+                        title="Blokir Pengguna"
                       >
                         <Ban className="w-4 h-4" />
                       </Button>
@@ -219,7 +225,7 @@ export default function UsersManagementPage() {
                         variant="ghost"
                         onClick={() => handleUnblockUser(user.id)}
                         className="hover:text-green-600"
-                        title="Unblock User"
+                        title="Buka Blokir"
                       >
                         <CheckCircle className="w-4 h-4" />
                       </Button>
@@ -229,7 +235,7 @@ export default function UsersManagementPage() {
                       variant="ghost"
                       onClick={() => handleDeleteUser(user.id, user.name)}
                       className="hover:text-red-600"
-                      title="Delete User"
+                      title="Hapus Pengguna"
                     >
                       <Trash2 className="w-4 h-4" />
                     </Button>
@@ -243,7 +249,7 @@ export default function UsersManagementPage() {
 
       {filteredUsers.length === 0 && (
         <div className="text-center py-12 text-zinc-500">
-          No users found matching your search.
+          Tidak ada pengguna yang ditemukan sesuai pencarian Anda.
         </div>
       )}
 

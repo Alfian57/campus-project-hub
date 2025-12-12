@@ -14,7 +14,7 @@ export default function DashboardLayout({
   }
 
   return (
-    <div className="flex h-screen bg-gradient-to-br from-zinc-50 via-white to-zinc-100 dark:from-zinc-950 dark:via-zinc-900 dark:to-black">
+    <div className="flex h-screen bg-gradient-to-br from-zinc-950 via-zinc-900 to-black">
       {/* Sidebar */}
       <aside className="w-72 flex-shrink-0">
         <Sidebar role={user.role} />

@@ -27,7 +27,7 @@ export function BlockUserModal({
 
   const handleBlock = async () => {
     if (!reason.trim()) {
-      toast.error("Please provide a reason for blocking");
+      toast.error("Silakan berikan alasan pemblokiran");
       return;
     }
 
@@ -35,7 +35,7 @@ export function BlockUserModal({
     await new Promise((resolve) => setTimeout(resolve, 1000));
     
     onBlock(userId, reason);
-    toast.success(`User ${userName} has been blocked`);
+    toast.success(`Pengguna ${userName} telah diblokir`);
     
     setIsLoading(false);
     setReason("");
@@ -46,18 +46,18 @@ export function BlockUserModal({
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Block User</DialogTitle>
+          <DialogTitle>Blokir Pengguna</DialogTitle>
           <DialogDescription>
-            Are you sure you want to block <strong>{userName}</strong>? This will prevent them from accessing the platform.
+            Yakin ingin memblokir <strong>{userName}</strong>? Ini akan mencegah mereka mengakses platform.
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4 py-4">
           <div className="space-y-2">
-            <Label htmlFor="reason">Reason for blocking</Label>
+            <Label htmlFor="reason">Alasan pemblokiran</Label>
             <Input
               id="reason"
-              placeholder="e.g., Spam content, inappropriate behavior"
+              placeholder="Contoh: Konten spam, perilaku tidak pantas"
               value={reason}
               onChange={(e) => setReason(e.target.value)}
               disabled={isLoading}
@@ -71,14 +71,14 @@ export function BlockUserModal({
             onClick={onClose}
             disabled={isLoading}
           >
-            Cancel
+            Batal
           </Button>
           <Button
             className="bg-red-600 hover:bg-red-700"
             onClick={handleBlock}
             disabled={isLoading}
           >
-            {isLoading ? "Blocking..." : "Block User"}
+            {isLoading ? "Memblokir..." : "Blokir Pengguna"}
           </Button>
         </DialogFooter>
       </DialogContent>

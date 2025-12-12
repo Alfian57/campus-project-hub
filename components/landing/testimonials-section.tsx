@@ -7,24 +7,24 @@ import { Quote } from "lucide-react";
 const testimonials = [
   {
     name: "Budi Santoso",
-    role: "Computer Science Student",
+    role: "Mahasiswa Ilmu Komputer",
     university: "Universitas Indonesia",
     avatarUrl: "https://api.dicebear.com/7.x/avataaars/svg?seed=Budi",
-    quote: "Campus Hub helped me showcase my EcoTrack project to thousands of people. I received amazing feedback and even got funding to continue development!",
+    quote: "Campus Hub membantu saya menampilkan proyek EcoTrack ke ribuan orang. Saya mendapat feedback luar biasa dan bahkan pendanaan untuk melanjutkan pengembangan!",
   },
   {
     name: "Siti Nurhaliza",
-    role: "Software Engineering Student",
+    role: "Mahasiswa Teknik Perangkat Lunak",
     university: "Institut Teknologi Bandung",
     avatarUrl: "https://api.dicebear.com/7.x/avataaars/svg?seed=Siti",
-    quote: "The platform made it so easy to share my work with recruiters. I landed my dream internship thanks to the visibility Campus Hub gave me!",
+    quote: "Platform ini sangat memudahkan saya membagikan karya ke recruiter. Saya berhasil mendapat magang impian berkat visibilitas yang diberikan Campus Hub!",
   },
   {
     name: "Ahmad Rizki",
-    role: "Information Systems Student",
+    role: "Mahasiswa Sistem Informasi",
     university: "Universitas Gadjah Mada",
     avatarUrl: "https://api.dicebear.com/7.x/avataaars/svg?seed=Ahmad",
-    quote: "I love how the community here is so supportive. The comments and donations I received motivated me to keep building more projects!",
+    quote: "Saya suka bagaimana komunitas di sini sangat suportif. Komentar dan donasi yang saya terima memotivasi saya untuk terus membangun lebih banyak proyek!",
   },
 ];
 
@@ -41,10 +41,10 @@ export function TestimonialsSection() {
           className="text-center mb-16"
         >
           <h2 className="text-4xl md:text-5xl font-bold text-white mb-4">
-            Student Success Stories
+            Cerita Sukses Mahasiswa
           </h2>
           <p className="text-lg text-zinc-400 max-w-2xl mx-auto">
-            Hear from students who have built their careers using Campus Hub
+            Dengarkan dari mahasiswa yang telah membangun karier mereka menggunakan Campus Hub
           </p>
         </motion.div>
 
@@ -80,6 +80,7 @@ export function TestimonialsSection() {
                       alt={testimonial.name}
                       fill
                       className="object-cover"
+                      unoptimized
                     />
                   </div>
                   <div>

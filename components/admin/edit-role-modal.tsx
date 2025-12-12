@@ -16,6 +16,12 @@ interface EditRoleModalProps {
   onUpdate: (userId: string, newRole: UserRole) => void;
 }
 
+const roleLabels: Record<UserRole, string> = {
+  user: "Pengguna",
+  moderator: "Moderator",
+  admin: "Admin",
+};
+
 export function EditRoleModal({
   isOpen,
   onClose,
@@ -31,7 +37,7 @@ export function EditRoleModal({
 
   const handleUpdate = async () => {
     if (selectedRole === currentRole) {
-      toast.info("No changes made");
+      toast.info("Tidak ada perubahan");
       onClose();
       return;
     }
@@ -40,7 +46,7 @@ export function EditRoleModal({
     await new Promise((resolve) => setTimeout(resolve, 1000));
     
     onUpdate(userId, selectedRole);
-    toast.success(`User ${userName}'s role updated to ${selectedRole}`);
+    toast.success(`Role pengguna ${userName} diubah ke ${roleLabels[selectedRole]}`);
     
     setIsLoading(false);
     onClose();
@@ -50,28 +56,28 @@ export function EditRoleModal({
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Edit User Role</DialogTitle>
+          <DialogTitle>Ubah Role Pengguna</DialogTitle>
           <DialogDescription>
-            Change the role for <strong>{userName}</strong>
+            Ubah role untuk <strong>{userName}</strong>
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4 py-4">
           <div className="space-y-2">
-            <Label>Select Role</Label>
+            <Label>Pilih Role</Label>
             <div className="grid grid-cols-3 gap-3">
               {roles.map((role) => (
                 <button
                   key={role}
                   onClick={() => setSelectedRole(role)}
                   disabled={isLoading}
-                  className={`px-4 py-3 rounded-lg border-2 transition-all capitalize ${
+                  className={`px-4 py-3 rounded-lg border-2 transition-all ${
                     selectedRole === role
                       ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400"
                       : "border-zinc-200 dark:border-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-700"
                   }`}
                 >
-                  <div className="font-medium">{role}</div>
+                  <div className="font-medium">{roleLabels[role]}</div>
                 </button>
               ))}
             </div>
@@ -80,7 +86,7 @@ export function EditRoleModal({
           {selectedRole === "admin" && (
             <div className="p-4 rounded-lg bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800">
               <p className="text-sm text-yellow-800 dark:text-yellow-400">
-                ⚠️ Admin role grants full access to all platform features
+                ⚠️ Role Admin memberikan akses penuh ke semua fitur platform
               </p>
             </div>
           )}
@@ -92,14 +98,14 @@ export function EditRoleModal({
             onClick={onClose}
             disabled={isLoading}
           >
-            Cancel
+            Batal
           </Button>
           <Button
             className="bg-blue-600 hover:bg-blue-700"
             onClick={handleUpdate}
             disabled={isLoading}
           >
-            {isLoading ? "Updating..." : "Update Role"}
+            {isLoading ? "Memperbarui..." : "Perbarui Role"}
           </Button>
         </DialogFooter>
       </DialogContent>

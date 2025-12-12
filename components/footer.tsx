@@ -17,7 +17,7 @@ export function Footer() {
               </span>
             </div>
             <p className="text-zinc-400 text-sm mb-4">
-              Empowering students to showcase their creativity and get recognized for their work.
+              Memberdayakan mahasiswa untuk menampilkan kreativitas dan mendapatkan pengakuan atas karya mereka.
             </p>
             {/* Social Links */}
             <div className="flex items-center gap-3">
@@ -50,26 +50,26 @@ export function Footer() {
 
           {/* Product */}
           <div>
-            <h3 className="text-white font-semibold mb-4">Product</h3>
+            <h3 className="text-white font-semibold mb-4">Produk</h3>
             <ul className="space-y-2">
               <li>
                 <Link href="/" className="text-zinc-400 hover:text-blue-400 transition-colors text-sm">
-                  Explore Projects
+                  Jelajahi Proyek
                 </Link>
               </li>
               <li>
                 <Link href="/register" className="text-zinc-400 hover:text-lime-400 transition-colors text-sm">
-                  Upload Project
+                  Unggah Proyek
                 </Link>
               </li>
               <li>
                 <a href="#features" className="text-zinc-400 hover:text-lime-400 transition-colors text-sm">
-                  Features
+                  Fitur
                 </a>
               </li>
               <li>
                 <a href="#how-it-works" className="text-zinc-400 hover:text-lime-400 transition-colors text-sm">
-                  How It Works
+                  Cara Kerja
                 </a>
               </li>
             </ul>
@@ -77,16 +77,16 @@ export function Footer() {
 
           {/* Company */}
           <div>
-            <h3 className="text-white font-semibold mb-4">Company</h3>
+            <h3 className="text-white font-semibold mb-4">Perusahaan</h3>
             <ul className="space-y-2">
               <li>
                 <Link href="/about" className="text-zinc-400 hover:text-lime-400 transition-colors text-sm">
-                  About Us
+                  Tentang Kami
                 </Link>
               </li>
               <li>
                 <Link href="/contact" className="text-zinc-400 hover:text-lime-400 transition-colors text-sm">
-                  Contact
+                  Kontak
                 </Link>
               </li>
               <li>
@@ -96,7 +96,7 @@ export function Footer() {
               </li>
               <li>
                 <Link href="/careers" className="text-zinc-400 hover:text-lime-400 transition-colors text-sm">
-                  Careers
+                  Karier
                 </Link>
               </li>
             </ul>
@@ -108,22 +108,22 @@ export function Footer() {
             <ul className="space-y-2">
               <li>
                 <Link href="/privacy" className="text-zinc-400 hover:text-lime-400 transition-colors text-sm">
-                  Privacy Policy
+                  Kebijakan Privasi
                 </Link>
               </li>
               <li>
                 <Link href="/terms" className="text-zinc-400 hover:text-lime-400 transition-colors text-sm">
-                  Terms of Service
+                  Syarat Layanan
                 </Link>
               </li>
               <li>
                 <Link href="/cookies" className="text-zinc-400 hover:text-lime-400 transition-colors text-sm">
-                  Cookie Policy
+                  Kebijakan Cookie
                 </Link>
               </li>
               <li>
                 <Link href="/guidelines" className="text-zinc-400 hover:text-lime-400 transition-colors text-sm">
-                  Community Guidelines
+                  Panduan Komunitas
                 </Link>
               </li>
             </ul>
@@ -134,7 +134,7 @@ export function Footer() {
         <div className="pt-8 border-t border-zinc-800">
           <div className="flex flex-col md:flex-row items-center justify-between gap-4">
             <p className="text-sm text-zinc-400">
-              © 2025 Campus Project Hub. Built with Next.js 14 & Midtrans.
+              © 2025 Campus Project Hub. Dibangun dengan Next.js 14 & Midtrans.
             </p>
             <div className="flex items-center gap-6">
               <a

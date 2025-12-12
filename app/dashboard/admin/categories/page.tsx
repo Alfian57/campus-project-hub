@@ -38,7 +38,7 @@ export default function CategoriesManagementPage() {
 
   const handleCreate = () => {
     if (!formData.name.trim()) {
-      toast.error("Category name is required");
+      toast.error("Nama kategori wajib diisi");
       return;
     }
 
@@ -53,7 +53,7 @@ export default function CategoriesManagementPage() {
     };
 
     setCategories((prev) => [...prev, newCategory]);
-    toast.success(`Category "${formData.name}" created`);
+    toast.success(`Kategori "${formData.name}" berhasil dibuat`);
     setFormData({ name: "", description: "", color: "blue" });
     setIsCreateModalOpen(false);
   };
@@ -75,7 +75,7 @@ export default function CategoriesManagementPage() {
       )
     );
 
-    toast.success(`Category "${formData.name}" updated`);
+    toast.success(`Kategori "${formData.name}" berhasil diperbarui`);
     setEditingCategory(null);
     setFormData({ name: "", description: "", color: "blue" });
   };
@@ -83,11 +83,11 @@ export default function CategoriesManagementPage() {
   const handleDelete = (categoryId: string, categoryName: string) => {
     if (
       confirm(
-        `Are you sure you want to delete "${categoryName}"? This will unassign projects from this category.`
+        `Yakin ingin menghapus "${categoryName}"? Ini akan menghapus kategori dari semua proyek terkait.`
       )
     ) {
       setCategories((prev) => prev.filter((cat) => cat.id !== categoryId));
-      toast.success(`Category "${categoryName}" deleted`);
+      toast.success(`Kategori "${categoryName}" berhasil dihapus`);
     }
   };
 
@@ -101,11 +101,11 @@ export default function CategoriesManagementPage() {
   };
 
   const colorOptions = [
-    { value: "blue", label: "Blue", class: "bg-blue-500" },
-    { value: "green", label: "Green", class: "bg-green-500" },
-    { value: "red", label: "Red", class: "bg-red-500" },
-    { value: "yellow", label: "Yellow", class: "bg-yellow-500" },
-    { value: "purple", label: "Purple", class: "bg-purple-500" },
+    { value: "blue", label: "Biru", class: "bg-blue-500" },
+    { value: "green", label: "Hijau", class: "bg-green-500" },
+    { value: "red", label: "Merah", class: "bg-red-500" },
+    { value: "yellow", label: "Kuning", class: "bg-yellow-500" },
+    { value: "purple", label: "Ungu", class: "bg-purple-500" },
     { value: "pink", label: "Pink", class: "bg-pink-500" },
   ];
 
@@ -115,10 +115,10 @@ export default function CategoriesManagementPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-zinc-900 dark:text-zinc-50">
-            Category Management
+            Manajemen Kategori
           </h1>
           <p className="text-zinc-600 dark:text-zinc-400 mt-1">
-            Manage project categories
+            Kelola kategori proyek
           </p>
         </div>
         <Button
@@ -126,7 +126,7 @@ export default function CategoriesManagementPage() {
           onClick={() => setIsCreateModalOpen(true)}
         >
           <Plus className="w-4 h-4 mr-2" />
-          Create Category
+          Buat Kategori
         </Button>
       </div>
 
@@ -134,7 +134,7 @@ export default function CategoriesManagementPage() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div className="p-4 rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900">
           <p className="text-sm text-zinc-600 dark:text-zinc-400">
-            Total Categories
+            Total Kategori
           </p>
           <p className="text-2xl font-bold text-zinc-900 dark:text-zinc-50">
             {categories.length}
@@ -142,7 +142,7 @@ export default function CategoriesManagementPage() {
         </div>
         <div className="p-4 rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900">
           <p className="text-sm text-zinc-600 dark:text-zinc-400">
-            Total Projects
+            Total Proyek
           </p>
           <p className="text-2xl font-bold text-blue-600">
             {categories.reduce((sum, cat) => sum + cat.projectCount, 0)}
@@ -150,7 +150,7 @@ export default function CategoriesManagementPage() {
         </div>
         <div className="p-4 rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900">
           <p className="text-sm text-zinc-600 dark:text-zinc-400">
-            Avg Projects/Category
+            Rata-rata Proyek/Kategori
           </p>
           <p className="text-2xl font-bold text-purple-600">
             {(
@@ -166,13 +166,13 @@ export default function CategoriesManagementPage() {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Color</TableHead>
-              <TableHead>Name</TableHead>
+              <TableHead>Warna</TableHead>
+              <TableHead>Nama</TableHead>
               <TableHead>Slug</TableHead>
-              <TableHead>Description</TableHead>
-              <TableHead>Projects</TableHead>
-              <TableHead>Created</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
+              <TableHead>Deskripsi</TableHead>
+              <TableHead>Proyek</TableHead>
+              <TableHead>Dibuat</TableHead>
+              <TableHead className="text-right">Aksi</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -211,7 +211,7 @@ export default function CategoriesManagementPage() {
                       variant="ghost"
                       onClick={() => openEditModal(category)}
                       className="hover:text-blue-600"
-                      title="Edit Category"
+                      title="Edit Kategori"
                     >
                       <Edit className="w-4 h-4" />
                     </Button>
@@ -220,7 +220,7 @@ export default function CategoriesManagementPage() {
                       variant="ghost"
                       onClick={() => handleDelete(category.id, category.name)}
                       className="hover:text-red-600"
-                      title="Delete Category"
+                      title="Hapus Kategori"
                     >
                       <Trash2 className="w-4 h-4" />
                     </Button>
@@ -244,30 +244,30 @@ export default function CategoriesManagementPage() {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>
-              {editingCategory ? "Edit Category" : "Create Category"}
+              {editingCategory ? "Edit Kategori" : "Buat Kategori"}
             </DialogTitle>
             <DialogDescription>
               {editingCategory
-                ? "Update category information"
-                : "Add a new project category"}
+                ? "Perbarui informasi kategori"
+                : "Tambahkan kategori proyek baru"}
             </DialogDescription>
           </DialogHeader>
 
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label htmlFor="name">Category Name</Label>
+              <Label htmlFor="name">Nama Kategori</Label>
               <Input
                 id="name"
                 value={formData.name}
                 onChange={(e) =>
                   setFormData((prev) => ({ ...prev, name: e.target.value }))
                 }
-                placeholder="e.g., Web Development"
+                placeholder="Contoh: Pengembangan Web"
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="description">Description</Label>
+              <Label htmlFor="description">Deskripsi</Label>
               <Input
                 id="description"
                 value={formData.description}
@@ -277,12 +277,12 @@ export default function CategoriesManagementPage() {
                     description: e.target.value,
                   }))
                 }
-                placeholder="Brief description of this category"
+                placeholder="Deskripsi singkat kategori ini"
               />
             </div>
 
             <div className="space-y-2">
-              <Label>Color</Label>
+              <Label>Warna</Label>
               <div className="grid grid-cols-6 gap-2">
                 {colorOptions.map((color) => (
                   <button
@@ -311,13 +311,13 @@ export default function CategoriesManagementPage() {
                 setFormData({ name: "", description: "", color: "blue" });
               }}
             >
-              Cancel
+              Batal
             </Button>
             <Button
               className="bg-blue-600 hover:bg-blue-700"
               onClick={editingCategory ? handleUpdate : handleCreate}
             >
-              {editingCategory ? "Update" : "Create"}
+              {editingCategory ? "Perbarui" : "Buat"}
             </Button>
           </DialogFooter>
         </DialogContent>

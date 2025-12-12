@@ -6,40 +6,46 @@ import { Rocket, Users, Heart, TrendingUp, Shield, Zap } from "lucide-react";
 const features = [
   {
     icon: Rocket,
-    title: "Showcase Your Work",
-    description: "Display your projects beautifully with live demos and source code links",
+    title: "Tampilkan Karyamu",
+    description: "Tampilkan proyekmu dengan indah lengkap dengan demo langsung dan tautan kode sumber",
   },
   {
     icon: Users,
-    title: "Get Feedback",
-    description: "Receive valuable feedback and reviews from peers and recruiters",
+    title: "Dapatkan Feedback",
+    description: "Terima masukan berharga dari sesama mahasiswa dan profesional industri",
   },
   {
     icon: Heart,
-    title: "Earn Support",
-    description: "Get financial support from people who appreciate your work",
+    title: "Raih Dukungan",
+    description: "Dapatkan dukungan finansial dari orang-orang yang mengapresiasi karyamu",
   },
   {
     icon: TrendingUp,
-    title: "Build Your Portfolio",
-    description: "Create a professional portfolio that stands out to employers",
+    title: "Bangun Portofolio",
+    description: "Buat portofolio profesional yang menonjol di mata perusahaan",
   },
   {
     icon: Shield,
-    title: "Secure Payments",
-    description: "Safe and secure donation system powered by Midtrans",
+    title: "Pembayaran Aman",
+    description: "Sistem donasi yang aman dan terpercaya didukung oleh Midtrans",
   },
   {
     icon: Zap,
-    title: "Real-time Updates",
-    description: "Instant notifications for likes, comments, and donations",
+    title: "Notifikasi Real-time",
+    description: "Notifikasi instan untuk suka, komentar, dan donasi",
   },
 ];
 
 export function FeaturesSection() {
   return (
-    <section className="py-24 bg-white dark:bg-zinc-900">
-      <div className="container mx-auto px-4">
+    <section className="py-24 bg-zinc-900 relative overflow-hidden">
+      {/* Background Decoration */}
+      <div className="absolute inset-0 opacity-30">
+        <div className="absolute top-1/4 right-0 w-80 h-80 bg-purple-600/20 rounded-full blur-3xl" />
+        <div className="absolute bottom-1/4 left-0 w-80 h-80 bg-blue-600/20 rounded-full blur-3xl" />
+      </div>
+      
+      <div className="container mx-auto px-4 relative z-10">
         {/* Section Header */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -48,11 +54,11 @@ export function FeaturesSection() {
           transition={{ duration: 0.5 }}
           className="text-center mb-16"
         >
-          <h2 className="text-4xl md:text-5xl font-bold text-zinc-900 dark:text-zinc-50 mb-4">
-            Why Choose Campus Hub?
+          <h2 className="text-4xl md:text-5xl font-bold text-zinc-50 mb-4">
+            Mengapa Campus Hub?
           </h2>
-          <p className="text-lg text-zinc-600 dark:text-zinc-400 max-w-2xl mx-auto">
-            Everything you need to showcase your projects and connect with the community
+          <p className="text-lg text-zinc-400 max-w-2xl mx-auto">
+            Semua yang kamu butuhkan untuk menampilkan proyek dan terhubung dengan komunitas
           </p>
         </motion.div>
 
@@ -67,17 +73,17 @@ export function FeaturesSection() {
               transition={{ duration: 0.5, delay: index * 0.1 }}
               className="group"
             >
-              <div className="p-8 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-800/50 hover:border-blue-400 dark:hover:border-blue-500 transition-all duration-300 hover:shadow-lg">
+              <div className="p-8 rounded-2xl border border-zinc-800 bg-zinc-800/50 hover:border-blue-500 transition-all duration-300 hover:shadow-lg hover:shadow-blue-500/10">
                 {/* Icon */}
-                <div className="w-14 h-14 rounded-xl bg-blue-100 dark:bg-blue-900/20 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
-                  <feature.icon className="w-7 h-7 text-blue-600 dark:text-blue-400" />
+                <div className="w-14 h-14 rounded-xl bg-blue-900/30 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
+                  <feature.icon className="w-7 h-7 text-blue-400" />
                 </div>
 
                 {/* Content */}
-                <h3 className="text-xl font-bold text-zinc-900 dark:text-zinc-50 mb-3">
+                <h3 className="text-xl font-bold text-zinc-50 mb-3">
                   {feature.title}
                 </h3>
-                <p className="text-zinc-600 dark:text-zinc-400">
+                <p className="text-zinc-400">
                   {feature.description}
                 </p>
               </div>

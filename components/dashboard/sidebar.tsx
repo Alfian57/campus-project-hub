@@ -21,76 +21,91 @@ export function Sidebar({ role = "user" }: SidebarProps) {
   const pathname = usePathname();
   const user = getCurrentUser();
 
+  // =========================================
+  // MENU MAHASISWA (User/Student Dashboard)
+  // Halaman-halaman yang dapat diakses oleh mahasiswa
+  // =========================================
   const userLinks: NavLink[] = [
+    // Menu Mahasiswa: Halaman ringkasan/overview dashboard
     {
       href: "/dashboard",
-      label: "Overview",
+      label: "Ringkasan",
       iconName: "LayoutDashboard",
     },
+    // Menu Mahasiswa: Halaman untuk melihat dan mengelola proyek milik mahasiswa
     {
       href: "/dashboard/projects",
-      label: "My Projects",
+      label: "Proyek Saya",
       iconName: "FolderKanban",
     },
-    {
-      href: "/dashboard/donations",
-      label: "Donations",
-      iconName: "DollarSign",
-    },
+    // Menu Mahasiswa: Halaman pengaturan akun dan preferensi
     {
       href: "/dashboard/settings",
-      label: "Settings",
+      label: "Pengaturan",
       iconName: "Settings",
     },
   ];
 
+  // =========================================
+  // MENU ADMIN (Admin Dashboard)
+  // Halaman-halaman yang hanya dapat diakses oleh admin
+  // Semua route admin berada di bawah /dashboard/admin/*
+  // =========================================
   const adminLinks: NavLink[] = [
+    // Menu Admin: Halaman ringkasan/overview dashboard admin
     {
-      href: "/admin",
-      label: "Dashboard",
+      href: "/dashboard/admin",
+      label: "Dashboard Admin",
       iconName: "LayoutDashboard",
     },
+    // Menu Admin: Halaman untuk mengelola pengguna (mahasiswa, dosen, dll)
     {
-      href: "/admin/users",
-      label: "Users",
+      href: "/dashboard/admin/users",
+      label: "Pengguna",
       iconName: "Users",
     },
+    // Menu Admin: Halaman untuk mengelola semua proyek yang ada
     {
-      href: "/admin/projects",
-      label: "Projects",
+      href: "/dashboard/admin/projects",
+      label: "Proyek",
       iconName: "FolderKanban",
     },
+    // Menu Admin: Halaman untuk mengelola kategori proyek
     {
-      href: "/admin/categories",
-      label: "Categories",
+      href: "/dashboard/admin/categories",
+      label: "Kategori",
       iconName: "Tags",
     },
+    // Menu Admin: Halaman untuk melihat dan mengelola transaksi pembelian
     {
-      href: "/admin/transactions",
-      label: "Transactions",
+      href: "/dashboard/admin/transactions",
+      label: "Transaksi",
       iconName: "DollarSign",
-    },
-    {
-      href: "/admin/reports",
-      label: "Reports",
-      iconName: "BarChart3",
     },
   ];
 
+  // =========================================
+  // MENU MODERATOR (Moderator Dashboard)
+  // Halaman-halaman yang dapat diakses oleh moderator
+  // Semua route moderator berada di bawah /dashboard/moderator/*
+  // =========================================
   const moderatorLinks: NavLink[] = [
+    // Menu Moderator: Halaman ringkasan/overview dashboard moderator
     {
-      href: "/moderator",
-      label: "Dashboard",
+      href: "/dashboard/moderator",
+      label: "Dashboard Moderator",
       iconName: "LayoutDashboard",
     },
+    // Menu Moderator: Halaman antrian proyek yang perlu di-review
     {
-      href: "/moderator/queue",
-      label: "Review Queue",
+      href: "/dashboard/moderator/queue",
+      label: "Antrian Review",
       iconName: "Flag",
     },
+    // Menu Moderator: Halaman untuk melihat semua proyek
     {
-      href: "/moderator/projects",
-      label: "Projects",
+      href: "/dashboard/moderator/projects",
+      label: "Proyek",
       iconName: "FolderKanban",
     },
   ];
@@ -104,6 +119,12 @@ export function Sidebar({ role = "user" }: SidebarProps) {
 
   const LogoIcon = LucideIcons.Sparkles;
   const LogOutIcon = LucideIcons.LogOut;
+
+  const rolePanelLabel = {
+    user: "Panel Pengguna",
+    admin: "Panel Admin",
+    moderator: "Panel Moderator",
+  };
 
   return (
     <div className="flex flex-col h-full bg-gradient-to-b from-zinc-50 to-white dark:from-zinc-950 dark:to-zinc-900 p-4">
@@ -124,7 +145,7 @@ export function Sidebar({ role = "user" }: SidebarProps) {
                   Campus Hub
                 </h1>
                 <p className="text-[10px] font-medium text-zinc-500 uppercase tracking-wider">
-                  {role} Panel
+                  {rolePanelLabel[role]}
                 </p>
               </div>
             </div>
@@ -212,7 +233,7 @@ export function Sidebar({ role = "user" }: SidebarProps) {
         <Link href="/">
           <button className="w-full flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 text-sm font-medium transition-colors group">
             <LogOutIcon className="w-4 h-4 group-hover:-translate-x-0.5 transition-transform" />
-            <span>Back to Home</span>
+            <span>Kembali ke Beranda</span>
           </button>
         </Link>
       </motion.div>

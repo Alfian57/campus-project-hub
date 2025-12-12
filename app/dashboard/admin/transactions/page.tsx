@@ -11,6 +11,12 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Download } from "lucide-react";
 
+const statusLabels: Record<string, string> = {
+  success: "Berhasil",
+  pending: "Menunggu",
+  failed: "Gagal",
+};
+
 export default function TransactionsPage() {
   const transactions = mockTransactions;
   const totalRevenue = transactions
@@ -23,15 +29,15 @@ export default function TransactionsPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-zinc-900 dark:text-zinc-50">
-            Transaction Monitor
+            Monitor Transaksi
           </h1>
           <p className="text-zinc-600 dark:text-zinc-400 mt-1">
-            View all platform transactions
+            Lihat semua transaksi platform
           </p>
         </div>
         <Button variant="outline">
           <Download className="w-4 h-4 mr-2" />
-          Export CSV
+          Ekspor CSV
         </Button>
       </div>
 
@@ -39,7 +45,7 @@ export default function TransactionsPage() {
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <div className="p-4 rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900">
           <p className="text-sm text-zinc-600 dark:text-zinc-400">
-            Total Revenue
+            Total Pendapatan
           </p>
           <p className="text-2xl font-bold text-green-600">
             {formatCurrency(totalRevenue)}
@@ -47,7 +53,7 @@ export default function TransactionsPage() {
         </div>
         <div className="p-4 rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900">
           <p className="text-sm text-zinc-600 dark:text-zinc-400">
-            Total Transactions
+            Total Transaksi
           </p>
           <p className="text-2xl font-bold text-zinc-900 dark:text-zinc-50">
             {transactions.length}
@@ -55,14 +61,14 @@ export default function TransactionsPage() {
         </div>
         <div className="p-4 rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900">
           <p className="text-sm text-zinc-600 dark:text-zinc-400">
-            Successful
+            Berhasil
           </p>
           <p className="text-2xl font-bold text-green-600">
             {transactions.filter((t) => t.status === "success").length}
           </p>
         </div>
         <div className="p-4 rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900">
-          <p className="text-sm text-zinc-600 dark:text-zinc-400">Pending</p>
+          <p className="text-sm text-zinc-600 dark:text-zinc-400">Menunggu</p>
           <p className="text-2xl font-bold text-yellow-600">
             {transactions.filter((t) => t.status === "pending").length}
           </p>
@@ -75,11 +81,11 @@ export default function TransactionsPage() {
           <TableHeader>
             <TableRow>
               <TableHead>ID</TableHead>
-              <TableHead>Project</TableHead>
-              <TableHead>Donor</TableHead>
-              <TableHead>Amount</TableHead>
+              <TableHead>Proyek</TableHead>
+              <TableHead>Donatur</TableHead>
+              <TableHead>Jumlah</TableHead>
               <TableHead>Status</TableHead>
-              <TableHead>Date</TableHead>
+              <TableHead>Tanggal</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -113,7 +119,7 @@ export default function TransactionsPage() {
                         : "bg-red-100 text-red-700 dark:bg-red-900/20 dark:text-red-400"
                     }
                   >
-                    {transaction.status}
+                    {statusLabels[transaction.status] || transaction.status}
                   </Badge>
                 </TableCell>
                 <TableCell className="text-sm text-zinc-600 dark:text-zinc-400">

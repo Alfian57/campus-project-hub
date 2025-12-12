@@ -32,7 +32,7 @@ export default function LoginPage() {
 
         {/* Footer */}
         <p className="text-center text-sm text-zinc-600 dark:text-zinc-400 mt-6">
-          © 2025 Campus Project Hub. All rights reserved.
+          © 2025 Campus Project Hub. Hak cipta dilindungi.
         </p>
       </div>
     </div>

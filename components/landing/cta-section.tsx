@@ -35,11 +35,11 @@ export function CTASection() {
 
           {/* Heading */}
           <h2 className="text-4xl md:text-6xl font-bold text-black mb-6">
-            Ready to Showcase Your Work?
+            Siap Tampilkan Karyamu?
           </h2>
           
           <p className="text-xl md:text-2xl text-black/80 mb-10 max-w-2xl mx-auto">
-            Join thousands of students who are building their portfolios and getting recognized for their amazing projects
+            Bergabunglah dengan ribuan mahasiswa yang membangun portofolio dan mendapatkan pengakuan untuk proyek-proyek luar biasa mereka
           </p>
 
           {/* CTA Buttons */}
@@ -55,7 +55,7 @@ export function CTASection() {
                 size="lg"
                 className="bg-black hover:bg-black/90 text-white font-semibold px-8 py-6 text-lg group"
               >
-                Get Started Free
+                Mulai Gratis
                 <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
               </Button>
             </Link>
@@ -64,9 +64,9 @@ export function CTASection() {
               <Button
                 size="lg"
                 variant="outline"
-                className="border-2 border-black bg-transparent hover:bg-black/10 text-black font-semibold px-8 py-6 text-lg"
+                className="border-2 border-black bg-transparent hover:bg-black/10 text-white font-semibold px-8 py-6 text-lg"
               >
-                Sign In
+                Masuk
               </Button>
             </Link>
           </motion.div>
@@ -81,17 +81,17 @@ export function CTASection() {
           >
             <div className="text-center">
               <div className="text-2xl font-bold text-black">1000+</div>
-              <div className="text-sm">Students</div>
+              <div className="text-sm">Mahasiswa</div>
             </div>
             <div className="w-px h-12 bg-black/20" />
             <div className="text-center">
               <div className="text-2xl font-bold text-black">500+</div>
-              <div className="text-sm">Projects</div>
+              <div className="text-sm">Proyek</div>
             </div>
             <div className="w-px h-12 bg-black/20" />
             <div className="text-center">
               <div className="text-2xl font-bold text-black">50+</div>
-              <div className="text-sm">Universities</div>
+              <div className="text-sm">Universitas</div>
             </div>
           </motion.div>
         </motion.div>

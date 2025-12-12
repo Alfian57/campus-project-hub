@@ -10,47 +10,47 @@ export default function AdminPage() {
       {/* Header */}
       <div>
         <h1 className="text-3xl font-bold text-zinc-900 dark:text-zinc-50 mb-2">
-          Admin Dashboard
+          Dashboard Admin
         </h1>
         <p className="text-zinc-600 dark:text-zinc-400">
-          Platform overview and administration
+          Ringkasan platform dan administrasi
         </p>
       </div>
 
       {/* Main Stats */}
       <div>
         <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-50 mb-4">
-          Platform Overview
+          Ringkasan Platform
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <StatsCard
-            title="Total Users"
+            title="Total Pengguna"
             value={stats.totalUsers}
             iconName="Users"
-            description={`${stats.activeUsers} active users`}
+            description={`${stats.activeUsers} pengguna aktif`}
             color="blue"
             trend={{ value: 12, isPositive: true }}
           />
           <StatsCard
-            title="Total Projects"
+            title="Total Proyek"
             value={stats.totalProjects}
             iconName="FolderKanban"
-            description={`${stats.activeProjects} published`}
+            description={`${stats.activeProjects} terpublikasi`}
             color="purple"
             trend={{ value: 8, isPositive: true }}
           />
           <StatsCard
-            title="Categories"
+            title="Kategori"
             value={stats.totalCategories}
             iconName="Tags"
-            description="Active categories"
+            description="Kategori aktif"
             color="yellow"
           />
           <StatsCard
-            title="Total Revenue"
+            title="Total Pendapatan"
             value={`Rp ${(stats.totalRevenue / 1000).toFixed(0)}K`}
             iconName="DollarSign"
-            description={`Rp ${(stats.revenueThisMonth / 1000).toFixed(0)}K this month`}
+            description={`Rp ${(stats.revenueThisMonth / 1000).toFixed(0)}K bulan ini`}
             color="green"
             trend={{ value: 15, isPositive: true }}
           />
@@ -60,35 +60,35 @@ export default function AdminPage() {
       {/* User Stats */}
       <div>
         <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-50 mb-4">
-          User Statistics
+          Statistik Pengguna
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <StatsCard
-            title="Active Users"
+            title="Pengguna Aktif"
             value={stats.activeUsers}
             iconName="UserCheck"
-            description="Currently active"
+            description="Sedang aktif"
             color="green"
           />
           <StatsCard
-            title="Blocked Users"
+            title="Pengguna Diblokir"
             value={stats.blockedUsers}
             iconName="UserX"
-            description="Blocked accounts"
+            description="Akun diblokir"
             color="red"
           />
           <StatsCard
-            title="Moderators"
+            title="Moderator"
             value={mockUsers.filter(u => u.role === "moderator").length}
             iconName="Shield"
-            description="Content moderators"
+            description="Moderator konten"
             color="purple"
           />
           <StatsCard
-            title="Growth Rate"
+            title="Tingkat Pertumbuhan"
             value="+18%"
             iconName="TrendingUp"
-            description="New users this month"
+            description="Pengguna baru bulan ini"
             color="blue"
             trend={{ value: 18, isPositive: true }}
           />
@@ -100,7 +100,7 @@ export default function AdminPage() {
         {/* Recent Transactions */}
         <div>
           <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-50 mb-4">
-            Recent Transactions
+            Transaksi Terbaru
           </h2>
           <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-6">
             <div className="space-y-4">
@@ -124,7 +124,7 @@ export default function AdminPage() {
                       Rp {(transaction.amount / 1000).toFixed(0)}K
                     </p>
                     <p className="text-xs text-zinc-500 capitalize">
-                      {transaction.status}
+                      {transaction.status === "success" ? "Berhasil" : transaction.status === "pending" ? "Menunggu" : "Gagal"}
                     </p>
                   </div>
                 </div>
@@ -136,7 +136,7 @@ export default function AdminPage() {
         {/* Recent Users */}
         <div>
           <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-50 mb-4">
-            Recent Users
+            Pengguna Terbaru
           </h2>
           <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-6">
             <div className="space-y-4">
@@ -166,7 +166,7 @@ export default function AdminPage() {
                         ? "bg-green-100 text-green-700 dark:bg-green-900/20 dark:text-green-400"
                         : "bg-red-100 text-red-700 dark:bg-red-900/20 dark:text-red-400"
                     }`}>
-                      {user.status}
+                      {user.status === "active" ? "Aktif" : "Diblokir"}
                     </p>
                   </div>
                 </div>

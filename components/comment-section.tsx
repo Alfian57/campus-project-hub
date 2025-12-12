@@ -26,7 +26,7 @@ export function CommentSection({
     e.preventDefault();
 
     if (!newComment.trim()) {
-      toast.error("Please enter a comment");
+      toast.error("Silakan masukkan komentar");
       return;
     }
 
@@ -39,7 +39,7 @@ export function CommentSection({
       createdAt: new Date(),
       user: {
         id: "guest",
-        name: "Guest User",
+        name: "Pengguna Tamu",
         avatarUrl: "https://api.dicebear.com/7.x/avataaars/svg?seed=Guest",
       },
     };
@@ -51,17 +51,17 @@ export function CommentSection({
     try {
       const result = await addComment(projectId, newComment);
       if (result.success) {
-        toast.success("Comment added!");
+        toast.success("Komentar ditambahkan!");
       } else {
         // Revert on error
         setComments(comments);
         setNewComment(newComment);
-        toast.error("Failed to add comment");
+        toast.error("Gagal menambahkan komentar");
       }
     } catch (error) {
       setComments(comments);
       setNewComment(newComment);
-      toast.error("An error occurred");
+      toast.error("Terjadi kesalahan");
     } finally {
       setIsSubmitting(false);
     }
@@ -76,13 +76,13 @@ export function CommentSection({
       const hours = Math.floor(diff / (1000 * 60 * 60));
       if (hours === 0) {
         const minutes = Math.floor(diff / (1000 * 60));
-        return minutes === 0 ? "Just now" : `${minutes}m ago`;
+        return minutes === 0 ? "Baru saja" : `${minutes} menit lalu`;
       }
-      return `${hours}h ago`;
+      return `${hours} jam lalu`;
     }
-    if (days === 1) return "Yesterday";
-    if (days < 7) return `${days}d ago`;
-    return new Date(date).toLocaleDateString();
+    if (days === 1) return "Kemarin";
+    if (days < 7) return `${days} hari lalu`;
+    return new Date(date).toLocaleDateString("id-ID");
   };
 
   return (
@@ -90,7 +90,7 @@ export function CommentSection({
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <MessageCircle className="w-5 h-5" />
-          Discussion ({comments.length})
+          Diskusi ({comments.length})
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-6">
@@ -99,7 +99,7 @@ export function CommentSection({
           <textarea
             value={newComment}
             onChange={(e) => setNewComment(e.target.value)}
-            placeholder="Share your thoughts or ask a question..."
+            placeholder="Bagikan pemikiranmu atau ajukan pertanyaan..."
             className="w-full min-h-[100px] px-4 py-3 rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 text-zinc-900 dark:text-zinc-50 placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-zinc-950 dark:focus:ring-zinc-300 resize-none"
             disabled={isSubmitting}
           />
@@ -110,7 +110,7 @@ export function CommentSection({
               className="bg-zinc-900 hover:bg-zinc-800 dark:bg-zinc-50 dark:hover:bg-zinc-200"
             >
               <Send className="w-4 h-4 mr-2" />
-              {isSubmitting ? "Posting..." : "Post Comment"}
+              {isSubmitting ? "Mengirim..." : "Kirim Komentar"}
             </Button>
           </div>
         </form>
@@ -119,7 +119,7 @@ export function CommentSection({
         <div className="space-y-4">
           {comments.length === 0 ? (
             <p className="text-center text-zinc-500 dark:text-zinc-400 py-8">
-              No comments yet. Be the first to share your thoughts!
+              Belum ada komentar. Jadilah yang pertama berbagi pemikiran!
             </p>
           ) : (
             comments.map((comment) => (
@@ -135,6 +135,7 @@ export function CommentSection({
                       alt={comment.user.name}
                       fill
                       className="object-cover"
+                      unoptimized
                     />
                   </div>
                 </div>

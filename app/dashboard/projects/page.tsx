@@ -22,15 +22,15 @@ export default function MyProjectsPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-zinc-900 dark:text-zinc-50">
-            My Projects
+            Proyek Saya
           </h1>
           <p className="text-zinc-600 dark:text-zinc-400 mt-1">
-            Manage all your projects
+            Kelola semua proyek Anda
           </p>
         </div>
         <Link href="/dashboard/projects/new">
           <Button className="bg-blue-600 hover:bg-blue-700">
-            Upload New Project
+            Unggah Proyek Baru
           </Button>
         </Link>
       </div>
@@ -40,12 +40,12 @@ export default function MyProjectsPage() {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Project</TableHead>
-              <TableHead>Category</TableHead>
-              <TableHead>Likes</TableHead>
-              <TableHead>Comments</TableHead>
+              <TableHead>Proyek</TableHead>
+              <TableHead>Kategori</TableHead>
+              <TableHead>Suka</TableHead>
+              <TableHead>Komentar</TableHead>
               <TableHead>Status</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
+              <TableHead className="text-right">Aksi</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -85,7 +85,7 @@ export default function MyProjectsPage() {
                 </TableCell>
                 <TableCell>
                   <Badge className="bg-green-100 text-green-700 dark:bg-green-900/20 dark:text-green-400">
-                    Published
+                    Terpublikasi
                   </Badge>
                 </TableCell>
                 <TableCell className="text-right">
@@ -120,11 +120,11 @@ export default function MyProjectsPage() {
       {userProjects.length === 0 && (
         <div className="text-center py-12">
           <p className="text-zinc-500 mb-4">
-            You haven't created any projects yet
+            Anda belum membuat proyek apapun
           </p>
           <Link href="/dashboard/projects/new">
             <Button className="bg-blue-600 hover:bg-blue-700">
-              Create Your First Project
+              Buat Proyek Pertama Anda
             </Button>
           </Link>
         </div>

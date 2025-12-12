@@ -34,12 +34,12 @@ export default function ProjectsManagementPage() {
   );
 
   const handleBlockProject = (projectId: string, projectTitle: string) => {
-    const reason = prompt(`Why are you blocking "${projectTitle}"?`);
+    const reason = prompt(`Mengapa Anda memblokir "${projectTitle}"?`);
     if (reason) {
       setProjects((prev) =>
         prev.map((p) => (p.id === projectId ? { ...p, status: "blocked" } : p))
       );
-      toast.success(`Project "${projectTitle}" has been blocked`);
+      toast.success(`Proyek "${projectTitle}" telah diblokir`);
     }
   };
 
@@ -47,23 +47,23 @@ export default function ProjectsManagementPage() {
     setProjects((prev) =>
       prev.map((p) => (p.id === projectId ? { ...p, status: "published" } : p))
     );
-    toast.success(`Project "${projectTitle}" has been unblocked`);
+    toast.success(`Proyek "${projectTitle}" telah dibuka blokirnya`);
   };
 
   const handleDeleteProject = (projectId: string, projectTitle: string) => {
     if (
       confirm(
-        `Are you sure you want to delete "${projectTitle}"? This action cannot be undone.`
+        `Yakin ingin menghapus "${projectTitle}"? Tindakan ini tidak dapat dibatalkan.`
       )
     ) {
       setProjects((prev) => prev.filter((p) => p.id !== projectId));
-      toast.success(`Project "${projectTitle}" has been deleted`);
+      toast.success(`Proyek "${projectTitle}" telah dihapus`);
     }
   };
 
   const handleToggleFeatured = (projectId: string) => {
     // Mock implementation
-    toast.success("Featured status toggled");
+    toast.success("Status unggulan diubah");
   };
 
   return (
@@ -71,10 +71,10 @@ export default function ProjectsManagementPage() {
       {/* Header */}
       <div>
         <h1 className="text-3xl font-bold text-zinc-900 dark:text-zinc-50">
-          Project Management
+          Manajemen Proyek
         </h1>
         <p className="text-zinc-600 dark:text-zinc-400 mt-1">
-          Manage all platform projects
+          Kelola semua proyek platform
         </p>
       </div>
 
@@ -83,14 +83,14 @@ export default function ProjectsManagementPage() {
         <div className="relative flex-1 max-w-md">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500" />
           <Input
-            placeholder="Search projects..."
+            placeholder="Cari proyek..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="pl-10"
           />
         </div>
         <select className="h-10 px-3 rounded-md border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900">
-          <option value="">All Categories</option>
+          <option value="">Semua Kategori</option>
           {mockCategories.map((cat) => (
             <option key={cat.id} value={cat.id}>
               {cat.name}
@@ -103,20 +103,20 @@ export default function ProjectsManagementPage() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div className="p-4 rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900">
           <p className="text-sm text-zinc-600 dark:text-zinc-400">
-            Total Projects
+            Total Proyek
           </p>
           <p className="text-2xl font-bold text-zinc-900 dark:text-zinc-50">
             {projects.length}
           </p>
         </div>
         <div className="p-4 rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900">
-          <p className="text-sm text-zinc-600 dark:text-zinc-400">Published</p>
+          <p className="text-sm text-zinc-600 dark:text-zinc-400">Terpublikasi</p>
           <p className="text-2xl font-bold text-green-600">
             {projects.filter((p) => p.status === "published").length}
           </p>
         </div>
         <div className="p-4 rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900">
-          <p className="text-sm text-zinc-600 dark:text-zinc-400">Blocked</p>
+          <p className="text-sm text-zinc-600 dark:text-zinc-400">Diblokir</p>
           <p className="text-2xl font-bold text-red-600">
             {projects.filter((p) => p.status === "blocked").length}
           </p>
@@ -128,13 +128,13 @@ export default function ProjectsManagementPage() {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Project</TableHead>
-              <TableHead>Author</TableHead>
+              <TableHead>Proyek</TableHead>
+              <TableHead>Pembuat</TableHead>
               <TableHead>Tech Stack</TableHead>
-              <TableHead>Likes</TableHead>
-              <TableHead>Comments</TableHead>
+              <TableHead>Suka</TableHead>
+              <TableHead>Komentar</TableHead>
               <TableHead>Status</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
+              <TableHead className="text-right">Aksi</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -198,7 +198,7 @@ export default function ProjectsManagementPage() {
                         : "bg-red-100 text-red-700 dark:bg-red-900/20 dark:text-red-400"
                     }
                   >
-                    {project.status}
+                    {project.status === "published" ? "Terpublikasi" : "Diblokir"}
                   </Badge>
                 </TableCell>
                 <TableCell>
@@ -208,7 +208,7 @@ export default function ProjectsManagementPage() {
                         size="sm"
                         variant="ghost"
                         className="hover:text-blue-600"
-                        title="View Project"
+                        title="Lihat Proyek"
                       >
                         <Eye className="w-4 h-4" />
                       </Button>
@@ -218,7 +218,7 @@ export default function ProjectsManagementPage() {
                       variant="ghost"
                       onClick={() => handleToggleFeatured(project.id)}
                       className="hover:text-yellow-600"
-                      title="Feature Project"
+                      title="Jadikan Unggulan"
                     >
                       <Star className="w-4 h-4" />
                     </Button>
@@ -230,7 +230,7 @@ export default function ProjectsManagementPage() {
                           handleBlockProject(project.id, project.title)
                         }
                         className="hover:text-red-600"
-                        title="Block Project"
+                        title="Blokir Proyek"
                       >
                         <Ban className="w-4 h-4" />
                       </Button>
@@ -242,7 +242,7 @@ export default function ProjectsManagementPage() {
                           handleUnblockProject(project.id, project.title)
                         }
                         className="hover:text-green-600"
-                        title="Unblock Project"
+                        title="Buka Blokir"
                       >
                         <CheckCircle className="w-4 h-4" />
                       </Button>
@@ -254,7 +254,7 @@ export default function ProjectsManagementPage() {
                         handleDeleteProject(project.id, project.title)
                       }
                       className="hover:text-red-600"
-                      title="Delete Project"
+                      title="Hapus Proyek"
                     >
                       <Trash2 className="w-4 h-4" />
                     </Button>
@@ -268,7 +268,7 @@ export default function ProjectsManagementPage() {
 
       {filteredProjects.length === 0 && (
         <div className="text-center py-12 text-zinc-500">
-          No projects found matching your search.
+          Tidak ada proyek yang ditemukan sesuai pencarian Anda.
         </div>
       )}
     </div>

@@ -15,9 +15,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Campus Project Hub - Showcase Your Work",
+  title: "Campus Project Hub - Pamerkan Karya Anda",
   description:
-    "A Dribbble-style platform for students to showcase projects, receive feedback, and get support from the community.",
+    "Platform untuk mahasiswa memamerkan proyek, menerima feedback, dan mendapat dukungan dari komunitas.",
 };
 
 export default function RootLayout({
@@ -31,7 +31,7 @@ export default function RootLayout({
     : "https://app.sandbox.midtrans.com/snap/snap.js";
 
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="id" className="dark" suppressHydrationWarning>
       <head>
         {midtransClientKey && (
           <Script

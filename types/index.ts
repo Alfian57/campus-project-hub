@@ -11,6 +11,7 @@ export interface Project {
   title: string;
   description: string;
   thumbnailUrl: string;
+  images?: string[]; // Array of image URLs for carousel
   techStack: string[];
   // External Links
   links: {
@@ -25,6 +26,9 @@ export interface Project {
   };
   // Monetization
   donationEnabled: boolean;
+  // Project Type
+  type: "free" | "paid";
+  price?: number; // Harga dalam Rupiah (opsional, hanya jika type = "paid")
   author: UserProfile;
 }
 
@@ -39,4 +43,16 @@ export interface TransactionResult {
   success: boolean;
   token?: string;
   error?: string;
+}
+
+export interface Article {
+  id: string;
+  title: string;
+  excerpt: string;
+  content: string;
+  thumbnailUrl: string;
+  category: string;
+  readingTime: number; // in minutes
+  publishedAt: Date;
+  author: UserProfile;
 }

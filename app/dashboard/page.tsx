@@ -38,23 +38,23 @@ export default function DashboardPage() {
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <StatsCard
-          title="Total Projects"
+          title="Total Proyek"
           value={userProjects.length}
           iconName="FolderKanban"
-          description="Projects yang telah dibuat"
+          description="Proyek yang telah dibuat"
           color="blue"
           trend={{ value: 12, isPositive: true }}
         />
         <StatsCard
-          title="Total Likes"
+          title="Total Suka"
           value={totalLikes}
           iconName="Heart"
-          description="Likes dari semua proyek"
+          description="Suka dari semua proyek"
           color="red"
           trend={{ value: 8, isPositive: true }}
         />
         <StatsCard
-          title="Total Donations"
+          title="Total Donasi"
           value={`Rp ${(userDonations / 1000).toFixed(0)}K`}
           iconName="DollarSign"
           description="Donasi yang diterima"
@@ -62,10 +62,10 @@ export default function DashboardPage() {
           trend={{ value: 15, isPositive: true }}
         />
         <StatsCard
-          title="Engagement Rate"
+          title="Tingkat Interaksi"
           value="23%"
           iconName="TrendingUp"
-          description="Tingkat interaksi"
+          description="Engagement rate"
           color="purple"
           trend={{ value: 5, isPositive: true }}
         />
@@ -75,11 +75,11 @@ export default function DashboardPage() {
       <div className="flex items-center gap-4">
         <Link href="/dashboard/projects/new">
           <Button className="bg-blue-600 hover:bg-blue-700">
-            Upload New Project
+            Unggah Proyek Baru
           </Button>
         </Link>
         <Link href="/dashboard/projects">
-          <Button variant="outline">Manage Projects</Button>
+          <Button variant="outline">Kelola Proyek</Button>
         </Link>
       </div>
 
@@ -87,11 +87,11 @@ export default function DashboardPage() {
       <div>
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-2xl font-bold text-zinc-900 dark:text-zinc-50">
-            My Projects
+            Proyek Saya
           </h2>
           <Link href="/dashboard/projects">
             <Button variant="ghost" size="sm">
-              View All →
+              Lihat Semua →
             </Button>
           </Link>
         </div>
@@ -106,7 +106,7 @@ export default function DashboardPage() {
       {/* Recent Activity */}
       <div>
         <h2 className="text-2xl font-bold text-zinc-900 dark:text-zinc-50 mb-6">
-          Recent Activity
+          Aktivitas Terbaru
         </h2>
         <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-6">
           <div className="space-y-4">
@@ -117,7 +117,7 @@ export default function DashboardPage() {
               >
                 <div>
                   <p className="font-medium text-zinc-900 dark:text-zinc-50">
-                    Donation received
+                    Donasi diterima
                   </p>
                   <p className="text-sm text-zinc-600 dark:text-zinc-400">
                     {transaction.donorName} • {transaction.projectTitle}
