@@ -24,7 +24,7 @@ const testimonials = [
     role: "Mahasiswa Sistem Informasi",
     university: "Universitas Gadjah Mada",
     avatarUrl: "https://api.dicebear.com/7.x/avataaars/svg?seed=Ahmad",
-    quote: "Saya suka bagaimana komunitas di sini sangat suportif. Komentar dan donasi yang saya terima memotivasi saya untuk terus membangun lebih banyak proyek!",
+    quote: "Saya suka bagaimana komunitas di sini sangat suportif. Komentar dan penjualan proyek yang saya terima memotivasi saya untuk terus membangun lebih banyak proyek!",
   },
 ];
 

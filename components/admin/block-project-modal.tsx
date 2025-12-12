@@ -8,21 +8,21 @@ import { Input } from "@/components/ui/input";
 import { Ban } from "lucide-react";
 import { toast } from "sonner";
 
-interface BlockUserModalProps {
+interface BlockProjectModalProps {
   isOpen: boolean;
   onClose: () => void;
-  userId: string;
-  userName: string;
-  onBlock: (userId: string, reason: string) => void;
+  projectId: string;
+  projectTitle: string;
+  onBlock: (projectId: string, reason: string) => void;
 }
 
-export function BlockUserModal({
+export function BlockProjectModal({
   isOpen,
   onClose,
-  userId,
-  userName,
+  projectId,
+  projectTitle,
   onBlock,
-}: BlockUserModalProps) {
+}: BlockProjectModalProps) {
   const [reason, setReason] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
@@ -35,8 +35,8 @@ export function BlockUserModal({
     setIsLoading(true);
     await new Promise((resolve) => setTimeout(resolve, 1000));
     
-    onBlock(userId, reason);
-    toast.success(`Pengguna ${userName} telah diblokir`);
+    onBlock(projectId, reason);
+    toast.success(`Proyek "${projectTitle}" telah diblokir`);
     
     setIsLoading(false);
     setReason("");
@@ -51,14 +51,14 @@ export function BlockUserModal({
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-md">
-        <DialogHeader className="text-center sm:text-center">
+        <DialogHeader>
           <div className="mx-auto w-14 h-14 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center mb-4">
             <Ban className="w-7 h-7 text-red-600 dark:text-red-400" />
           </div>
-          <DialogTitle className="text-xl">Blokir Pengguna</DialogTitle>
+          <DialogTitle className="text-center text-xl">Blokir Proyek</DialogTitle>
           <DialogDescription className="text-center">
-            Yakin ingin memblokir <strong className="text-zinc-900 dark:text-zinc-100">{userName}</strong>?
-            <span className="block mt-1">Ini akan mencegah mereka mengakses platform.</span>
+            Yakin ingin memblokir proyek <strong className="text-zinc-900 dark:text-zinc-100">&quot;{projectTitle}&quot;</strong>?
+            <span className="block mt-1">Proyek ini tidak akan terlihat oleh publik.</span>
           </DialogDescription>
         </DialogHeader>
 
@@ -67,7 +67,7 @@ export function BlockUserModal({
             <Label htmlFor="reason">Alasan pemblokiran</Label>
             <Input
               id="reason"
-              placeholder="Contoh: Konten spam, perilaku tidak pantas"
+              placeholder="Contoh: Konten melanggar, plagiarisme, dll."
               value={reason}
               onChange={(e) => setReason(e.target.value)}
               disabled={isLoading}
@@ -89,11 +89,10 @@ export function BlockUserModal({
             onClick={handleBlock}
             disabled={isLoading}
           >
-            {isLoading ? "Memblokir..." : "Blokir Pengguna"}
+            {isLoading ? "Memblokir..." : "Blokir Proyek"}
           </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
   );
 }
-

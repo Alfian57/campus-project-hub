@@ -32,11 +32,29 @@ export function Sidebar({ role = "user" }: SidebarProps) {
       label: "Ringkasan",
       iconName: "LayoutDashboard",
     },
+    // Menu Mahasiswa: Halaman profil pengguna
+    {
+      href: "/dashboard/profile",
+      label: "Profil Saya",
+      iconName: "User",
+    },
     // Menu Mahasiswa: Halaman untuk melihat dan mengelola proyek milik mahasiswa
     {
       href: "/dashboard/projects",
       label: "Proyek Saya",
       iconName: "FolderKanban",
+    },
+    // Menu Mahasiswa: Halaman untuk melihat dan mengelola artikel milik mahasiswa
+    {
+      href: "/dashboard/articles",
+      label: "Artikel Saya",
+      iconName: "FileText",
+    },
+    // Menu Mahasiswa: Halaman leaderboard
+    {
+      href: "/dashboard/leaderboard",
+      label: "Leaderboard",
+      iconName: "Trophy",
     },
     // Menu Mahasiswa: Halaman pengaturan akun dan preferensi
     {
@@ -75,6 +93,12 @@ export function Sidebar({ role = "user" }: SidebarProps) {
       href: "/dashboard/admin/categories",
       label: "Kategori",
       iconName: "Tags",
+    },
+    // Menu Admin: Halaman untuk mengelola artikel
+    {
+      href: "/dashboard/admin/articles",
+      label: "Artikel",
+      iconName: "FileText",
     },
     // Menu Admin: Halaman untuk melihat dan mengelola transaksi pembelian
     {
@@ -218,17 +242,20 @@ export function Sidebar({ role = "user" }: SidebarProps) {
         animate={{ opacity: 1, y: 0 }}
         className="p-4 rounded-2xl bg-white dark:bg-zinc-900 shadow-sm border border-zinc-200 dark:border-zinc-800"
       >
-        <div className="flex items-center gap-3 mb-3 pb-3 border-b border-zinc-100 dark:border-zinc-800">
-          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center text-white font-semibold text-sm">
-            {user?.name?.charAt(0) || "U"}
+        <Link href="/dashboard/profile">
+          <div className="flex items-center gap-3 mb-3 pb-3 border-b border-zinc-100 dark:border-zinc-800 cursor-pointer hover:bg-zinc-50 dark:hover:bg-zinc-800/50 -mx-2 px-2 py-1 rounded-lg transition-colors">
+            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center text-white font-semibold text-sm">
+              {user?.name?.charAt(0) || "U"}
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-50 truncate">
+                {user?.name}
+              </p>
+              <p className="text-xs text-zinc-500 truncate">{user?.email}</p>
+            </div>
+            <LucideIcons.ChevronRight className="w-4 h-4 text-zinc-400" />
           </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-50 truncate">
-              {user?.name}
-            </p>
-            <p className="text-xs text-zinc-500 truncate">{user?.email}</p>
-          </div>
-        </div>
+        </Link>
         
         <Link href="/">
           <button className="w-full flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 text-sm font-medium transition-colors group">

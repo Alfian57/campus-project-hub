@@ -17,7 +17,7 @@ export default function DashboardPage() {
 
   // Calculate user stats
   const totalLikes = userProjects.reduce((sum, p) => sum + p.stats.likes, 0);
-  const userDonations = mockTransactions
+  const userSales = mockTransactions
     .filter((t) =>
       userProjects.some((p) => p.id === t.projectId && t.status === "success")
     )
@@ -54,10 +54,10 @@ export default function DashboardPage() {
           trend={{ value: 8, isPositive: true }}
         />
         <StatsCard
-          title="Total Donasi"
-          value={`Rp ${(userDonations / 1000).toFixed(0)}K`}
+          title="Total Penjualan"
+          value={`Rp ${(userSales / 1000).toFixed(0)}K`}
           iconName="DollarSign"
-          description="Donasi yang diterima"
+          description="Penjualan yang diterima"
           color="green"
           trend={{ value: 15, isPositive: true }}
         />
@@ -117,10 +117,10 @@ export default function DashboardPage() {
               >
                 <div>
                   <p className="font-medium text-zinc-900 dark:text-zinc-50">
-                    Donasi diterima
+                    Pembelian diterima
                   </p>
                   <p className="text-sm text-zinc-600 dark:text-zinc-400">
-                    {transaction.donorName} • {transaction.projectTitle}
+                    {transaction.buyerName} • {transaction.projectTitle}
                   </p>
                 </div>
                 <div className="text-right">

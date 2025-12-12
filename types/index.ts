@@ -24,8 +24,6 @@ export interface Project {
     likes: number; // Render with Optimistic UI
     commentCount: number;
   };
-  // Monetization
-  donationEnabled: boolean;
   // Project Type
   type: "free" | "paid";
   price?: number; // Harga dalam Rupiah (opsional, hanya jika type = "paid")
@@ -55,4 +53,5 @@ export interface Article {
   readingTime: number; // in minutes
   publishedAt: Date;
   author: UserProfile;
+  status?: "published" | "draft" | "blocked";
 }

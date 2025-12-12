@@ -47,7 +47,6 @@ export const mockProjects: Project[] = [
       likes: 89,
       commentCount: 12
     },
-    donationEnabled: true,
     type: "free",
     author: users[0]
   },
@@ -70,7 +69,6 @@ export const mockProjects: Project[] = [
       likes: 67,
       commentCount: 8
     },
-    donationEnabled: true,
     type: "paid",
     price: 75000,
     author: users[1]
@@ -96,7 +94,6 @@ export const mockProjects: Project[] = [
       likes: 156,
       commentCount: 24
     },
-    donationEnabled: true,
     type: "free",
     author: users[2]
   },
@@ -115,7 +112,6 @@ export const mockProjects: Project[] = [
       likes: 112,
       commentCount: 18
     },
-    donationEnabled: true,
     type: "paid",
     price: 50000,
     author: users[0]
@@ -135,7 +131,6 @@ export const mockProjects: Project[] = [
       likes: 245,
       commentCount: 35
     },
-    donationEnabled: true,
     type: "paid",
     price: 150000,
     author: users[1]
@@ -155,7 +150,6 @@ export const mockProjects: Project[] = [
       likes: 73,
       commentCount: 9
     },
-    donationEnabled: true,
     type: "paid",
     price: 100000,
     author: users[2]

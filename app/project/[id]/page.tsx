@@ -6,7 +6,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { CommentSection } from "@/components/comment-section";
 import { ImageCarousel } from "@/components/image-carousel";
-import { Github, Globe, Eye, Heart, ArrowLeft } from "lucide-react";
+import { PurchaseModal } from "@/components/purchase-modal";
+import { Github, Globe, Eye, Heart, ArrowLeft, Lock, Crown } from "lucide-react";
 import Link from "next/link";
 
 interface ProjectPageProps {
@@ -22,6 +23,10 @@ export default async function ProjectPage({ params }: ProjectPageProps) {
   }
 
   const comments = mockComments[id] || [];
+  
+  // In production, this would check if the current user has purchased the project
+  const hasPurchased = false;
+  const canAccessSourceCode = project.type === "free" || hasPurchased;
 
   return (
     <div className="min-h-screen bg-zinc-950 relative overflow-hidden">
@@ -51,9 +56,23 @@ export default async function ProjectPage({ params }: ProjectPageProps) {
           <div className="lg:col-span-2 space-y-8">
             {/* Project Header */}
             <div>
-              <h1 className="text-4xl font-bold text-zinc-50 mb-4">
-                {project.title}
-              </h1>
+              <div className="flex items-center gap-3 mb-4">
+                <h1 className="text-4xl font-bold text-zinc-50">
+                  {project.title}
+                </h1>
+                {/* Price Badge */}
+                {project.type === "paid" && (
+                  <Badge className="bg-gradient-to-r from-orange-500 to-amber-500 text-white font-bold px-3 py-1 flex items-center gap-1.5">
+                    <Crown className="w-4 h-4" />
+                    Rp {project.price?.toLocaleString("id-ID")}
+                  </Badge>
+                )}
+                {project.type === "free" && (
+                  <Badge className="bg-green-100 dark:bg-green-900/30 border border-green-500 text-green-700 dark:text-green-400 font-semibold">
+                    Gratis
+                  </Badge>
+                )}
+              </div>
               <p className="text-lg text-zinc-400 mb-6">
                 {project.description}
               </p>
@@ -125,6 +144,8 @@ export default async function ProjectPage({ params }: ProjectPageProps) {
                   <h3 className="font-semibold text-zinc-50 mb-4">
                     Tautan Proyek
                   </h3>
+                  
+                  {/* Demo Button - Always Available */}
                   <a
                     href={project.links.demo}
                     target="_blank"
@@ -135,16 +156,48 @@ export default async function ProjectPage({ params }: ProjectPageProps) {
                       Lihat Demo
                     </Button>
                   </a>
-                  <a
-                    href={project.links.github}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    <Button className="w-full border-zinc-700 text-zinc-300 hover:bg-zinc-800" size="lg" variant="outline">
-                      <Github className="w-4 h-4 mr-2" />
-                      Lihat Kode Sumber
-                    </Button>
-                  </a>
+                  
+                  {/* Source Code Button - Conditional */}
+                  {canAccessSourceCode ? (
+                    <a
+                      href={project.links.github}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      <Button className="w-full border-zinc-700 text-zinc-300 hover:bg-zinc-800 mt-3" size="lg" variant="outline">
+                        <Github className="w-4 h-4 mr-2" />
+                        Lihat Kode Sumber
+                      </Button>
+                    </a>
+                  ) : (
+                    <div className="mt-3 space-y-3">
+                      {/* Locked Source Code Notice */}
+                      <div className="p-3 bg-zinc-800/50 rounded-lg border border-zinc-700">
+                        <div className="flex items-center gap-2 text-zinc-400 text-sm mb-2">
+                          <Lock className="w-4 h-4" />
+                          <span>Kode sumber terkunci</span>
+                        </div>
+                        <p className="text-xs text-zinc-500">
+                          Beli proyek ini untuk mendapatkan akses ke source code
+                        </p>
+                      </div>
+                      
+                      {/* Purchase Button */}
+                      <PurchaseModal
+                        projectId={project.id}
+                        projectTitle={project.title}
+                        price={project.price || 0}
+                      >
+                        <Button 
+                          className="w-full bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-semibold" 
+                          size="lg"
+                        >
+                          <Crown className="w-4 h-4 mr-2" />
+                          Beli - Rp {project.price?.toLocaleString("id-ID")}
+                        </Button>
+                      </PurchaseModal>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             </div>
@@ -154,3 +207,4 @@ export default async function ProjectPage({ params }: ProjectPageProps) {
     </div>
   );
 }
+

@@ -16,7 +16,12 @@ export interface User {
   joinedAt: Date;
   projectCount: number;
   totalLikes: number;
-  totalDonations: number;
+  totalSales: number;
+  // Gamification
+  totalExp: number;
+  // Profile
+  bio?: string;
+  phone?: string;
 }
 
 export interface Category {
@@ -44,7 +49,7 @@ export interface Transaction {
   id: string;
   projectId: string;
   projectTitle: string;
-  donorName: string;
+  buyerName: string;
   amount: number;
   status: "success" | "pending" | "failed";
   createdAt: Date;
@@ -53,7 +58,7 @@ export interface Transaction {
 export interface DashboardStats {
   totalProjects: number;
   totalLikes: number;
-  totalDonations: number;
+  totalSales: number;
   totalRevenue: number;
 }
 

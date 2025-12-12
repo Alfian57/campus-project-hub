@@ -25,11 +25,14 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
+import { ConfirmDeleteModal } from "@/components/admin/confirm-delete-modal";
 
 export default function CategoriesManagementPage() {
   const [categories, setCategories] = useState<Category[]>(mockCategories);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
+  const [categoryToDelete, setCategoryToDelete] = useState<Category | null>(null);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
     description: "",
@@ -80,14 +83,15 @@ export default function CategoriesManagementPage() {
     setFormData({ name: "", description: "", color: "blue" });
   };
 
-  const handleDelete = (categoryId: string, categoryName: string) => {
-    if (
-      confirm(
-        `Yakin ingin menghapus "${categoryName}"? Ini akan menghapus kategori dari semua proyek terkait.`
-      )
-    ) {
-      setCategories((prev) => prev.filter((cat) => cat.id !== categoryId));
-      toast.success(`Kategori "${categoryName}" berhasil dihapus`);
+  const openDeleteModal = (category: Category) => {
+    setCategoryToDelete(category);
+    setIsDeleteModalOpen(true);
+  };
+
+  const handleDelete = () => {
+    if (categoryToDelete) {
+      setCategories((prev) => prev.filter((cat) => cat.id !== categoryToDelete.id));
+      toast.success(`Kategori "${categoryToDelete.name}" berhasil dihapus`);
     }
   };
 
@@ -218,7 +222,7 @@ export default function CategoriesManagementPage() {
                     <Button
                       size="sm"
                       variant="ghost"
-                      onClick={() => handleDelete(category.id, category.name)}
+                      onClick={() => openDeleteModal(category)}
                       className="hover:text-red-600"
                       title="Hapus Kategori"
                     >
@@ -322,6 +326,19 @@ export default function CategoriesManagementPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Delete Confirmation Modal */}
+      {categoryToDelete && (
+        <ConfirmDeleteModal
+          isOpen={isDeleteModalOpen}
+          onClose={() => setIsDeleteModalOpen(false)}
+          onConfirm={handleDelete}
+          title="Hapus Kategori"
+          itemName={categoryToDelete.name}
+          description="Ini akan menghapus kategori dari semua proyek terkait."
+        />
+      )}
     </div>
   );
 }
+

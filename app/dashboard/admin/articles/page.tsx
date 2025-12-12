@@ -1,8 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { mockProjects } from "@/lib/mock-data";
-import { mockCategories } from "@/lib/mock-dashboard-data";
+import { mockArticles } from "@/lib/mock-data";
 import {
   Table,
   TableBody,
@@ -14,63 +13,79 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Ban, CheckCircle, Eye, Trash2, Search, Star } from "lucide-react";
-import { Project } from "@/types";
+import { Ban, CheckCircle, Eye, Trash2, Search, Clock } from "lucide-react";
+import { Article } from "@/types";
 import { toast } from "sonner";
 import Link from "next/link";
 import { ConfirmDeleteModal } from "@/components/admin/confirm-delete-modal";
-import { BlockProjectModal } from "@/components/admin/block-project-modal";
+import { BlockArticleModal } from "@/components/admin/block-article-modal";
 
-type ProjectWithStatus = Project & { status: "published" | "blocked" };
+type ArticleWithStatus = Article & { status: "published" | "draft" | "blocked" };
 
-export default function ProjectsManagementPage() {
-  const [projects, setProjects] = useState<ProjectWithStatus[]>(
-    mockProjects.map((p) => ({ ...p, status: "published" as const }))
+// Article categories
+const articleCategories = [
+  "Karier",
+  "Teknologi",
+  "Produktivitas",
+  "Pengembangan",
+  "Mobile",
+  "Keamanan",
+];
+
+export default function ArticlesManagementPage() {
+  const [articles, setArticles] = useState<ArticleWithStatus[]>(
+    mockArticles.map((a) => ({ ...a, status: "published" as const }))
   );
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedProject, setSelectedProject] = useState<ProjectWithStatus | null>(null);
+  const [categoryFilter, setCategoryFilter] = useState("");
+  const [selectedArticle, setSelectedArticle] = useState<ArticleWithStatus | null>(null);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isBlockModalOpen, setIsBlockModalOpen] = useState(false);
 
-  const filteredProjects = projects.filter(
-    (project) =>
-      project.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      project.description.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredArticles = articles.filter((article) => {
+    const matchesSearch =
+      article.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      article.author.name.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesCategory = !categoryFilter || article.category === categoryFilter;
+    return matchesSearch && matchesCategory;
+  });
 
-  const openBlockModal = (project: ProjectWithStatus) => {
-    setSelectedProject(project);
+  const openBlockModal = (article: ArticleWithStatus) => {
+    setSelectedArticle(article);
     setIsBlockModalOpen(true);
   };
 
-  const handleBlockProject = (projectId: string, reason: string) => {
-    setProjects((prev) =>
-      prev.map((p) => (p.id === projectId ? { ...p, status: "blocked" } : p))
+  const handleBlockArticle = (articleId: string, reason: string) => {
+    setArticles((prev) =>
+      prev.map((a) => (a.id === articleId ? { ...a, status: "blocked" } : a))
     );
   };
 
-  const handleUnblockProject = (projectId: string, projectTitle: string) => {
-    setProjects((prev) =>
-      prev.map((p) => (p.id === projectId ? { ...p, status: "published" } : p))
+  const handleUnblockArticle = (articleId: string, articleTitle: string) => {
+    setArticles((prev) =>
+      prev.map((a) => (a.id === articleId ? { ...a, status: "published" } : a))
     );
-    toast.success(`Proyek "${projectTitle}" telah dibuka blokirnya`);
+    toast.success(`Artikel "${articleTitle}" telah dibuka blokirnya`);
   };
 
-  const openDeleteModal = (project: ProjectWithStatus) => {
-    setSelectedProject(project);
+  const openDeleteModal = (article: ArticleWithStatus) => {
+    setSelectedArticle(article);
     setIsDeleteModalOpen(true);
   };
 
-  const handleDeleteProject = () => {
-    if (selectedProject) {
-      setProjects((prev) => prev.filter((p) => p.id !== selectedProject.id));
-      toast.success(`Proyek "${selectedProject.title}" telah dihapus`);
+  const handleDeleteArticle = () => {
+    if (selectedArticle) {
+      setArticles((prev) => prev.filter((a) => a.id !== selectedArticle.id));
+      toast.success(`Artikel "${selectedArticle.title}" telah dihapus`);
     }
   };
 
-  const handleToggleFeatured = (projectId: string) => {
-    // Mock implementation
-    toast.success("Status unggulan diubah");
+  const formatDate = (date: Date) => {
+    return new Intl.DateTimeFormat("id-ID", {
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+    }).format(date);
   };
 
   return (
@@ -78,10 +93,10 @@ export default function ProjectsManagementPage() {
       {/* Header */}
       <div>
         <h1 className="text-3xl font-bold text-zinc-900 dark:text-zinc-50">
-          Manajemen Proyek
+          Manajemen Artikel
         </h1>
         <p className="text-zinc-600 dark:text-zinc-400 mt-1">
-          Kelola semua proyek platform
+          Kelola semua artikel platform
         </p>
       </div>
 
@@ -90,17 +105,21 @@ export default function ProjectsManagementPage() {
         <div className="relative flex-1 max-w-md">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500" />
           <Input
-            placeholder="Cari proyek..."
+            placeholder="Cari artikel..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="pl-10"
           />
         </div>
-        <select className="h-10 px-3 rounded-md border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900">
+        <select
+          value={categoryFilter}
+          onChange={(e) => setCategoryFilter(e.target.value)}
+          className="h-10 px-3 rounded-md border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100"
+        >
           <option value="">Semua Kategori</option>
-          {mockCategories.map((cat) => (
-            <option key={cat.id} value={cat.id}>
-              {cat.name}
+          {articleCategories.map((cat) => (
+            <option key={cat} value={cat}>
+              {cat}
             </option>
           ))}
         </select>
@@ -110,56 +129,56 @@ export default function ProjectsManagementPage() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div className="p-4 rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900">
           <p className="text-sm text-zinc-600 dark:text-zinc-400">
-            Total Proyek
+            Total Artikel
           </p>
           <p className="text-2xl font-bold text-zinc-900 dark:text-zinc-50">
-            {projects.length}
+            {articles.length}
           </p>
         </div>
         <div className="p-4 rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900">
           <p className="text-sm text-zinc-600 dark:text-zinc-400">Terpublikasi</p>
           <p className="text-2xl font-bold text-green-600">
-            {projects.filter((p) => p.status === "published").length}
+            {articles.filter((a) => a.status === "published").length}
           </p>
         </div>
         <div className="p-4 rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900">
           <p className="text-sm text-zinc-600 dark:text-zinc-400">Diblokir</p>
           <p className="text-2xl font-bold text-red-600">
-            {projects.filter((p) => p.status === "blocked").length}
+            {articles.filter((a) => a.status === "blocked").length}
           </p>
         </div>
       </div>
 
-      {/* Projects Table */}
+      {/* Articles Table */}
       <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 overflow-hidden">
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Proyek</TableHead>
-              <TableHead>Pembuat</TableHead>
-              <TableHead>Tech Stack</TableHead>
-              <TableHead>Suka</TableHead>
-              <TableHead>Komentar</TableHead>
+              <TableHead>Artikel</TableHead>
+              <TableHead>Penulis</TableHead>
+              <TableHead>Kategori</TableHead>
+              <TableHead>Waktu Baca</TableHead>
+              <TableHead>Diterbitkan</TableHead>
               <TableHead>Status</TableHead>
               <TableHead className="text-right">Aksi</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filteredProjects.map((project) => (
-              <TableRow key={project.id}>
+            {filteredArticles.map((article) => (
+              <TableRow key={article.id}>
                 <TableCell>
                   <div className="flex items-center gap-3">
                     <img
-                      src={project.thumbnailUrl}
-                      alt={project.title}
+                      src={article.thumbnailUrl}
+                      alt={article.title}
                       className="w-16 h-12 rounded-lg object-cover"
                     />
-                    <div>
-                      <div className="font-medium text-zinc-900 dark:text-zinc-50">
-                        {project.title}
+                    <div className="max-w-xs">
+                      <div className="font-medium text-zinc-900 dark:text-zinc-50 truncate">
+                        {article.title}
                       </div>
-                      <div className="text-sm text-zinc-500">
-                        {project.description.slice(0, 40)}...
+                      <div className="text-sm text-zinc-500 truncate">
+                        {article.excerpt.slice(0, 50)}...
                       </div>
                     </div>
                   </div>
@@ -167,97 +186,91 @@ export default function ProjectsManagementPage() {
                 <TableCell>
                   <div className="flex items-center gap-2">
                     <img
-                      src={project.author.avatarUrl}
-                      alt={project.author.name}
+                      src={article.author.avatarUrl}
+                      alt={article.author.name}
                       className="w-8 h-8 rounded-full"
                     />
                     <div>
                       <div className="text-sm font-medium">
-                        {project.author.name}
-                      </div>
-                      <div className="text-xs text-zinc-500">
-                        {project.author.university}
+                        {article.author.name}
                       </div>
                     </div>
                   </div>
                 </TableCell>
                 <TableCell>
-                  <div className="flex gap-1">
-                    {project.techStack.slice(0, 2).map((tech) => (
-                      <Badge key={tech} variant="secondary" className="text-xs">
-                        {tech}
-                      </Badge>
-                    ))}
-                    {project.techStack.length > 2 && (
-                      <Badge variant="secondary" className="text-xs">
-                        +{project.techStack.length - 2}
-                      </Badge>
-                    )}
+                  <Badge variant="secondary" className="text-xs">
+                    {article.category}
+                  </Badge>
+                </TableCell>
+                <TableCell>
+                  <div className="flex items-center gap-1 text-sm text-zinc-500">
+                    <Clock className="w-3.5 h-3.5" />
+                    {article.readingTime} menit
                   </div>
                 </TableCell>
-                <TableCell>{project.stats.likes}</TableCell>
-                <TableCell>{project.stats.commentCount}</TableCell>
+                <TableCell>
+                  <span className="text-sm text-zinc-500">
+                    {formatDate(article.publishedAt)}
+                  </span>
+                </TableCell>
                 <TableCell>
                   <Badge
                     className={
-                      project.status === "published"
+                      article.status === "published"
                         ? "bg-green-100 text-green-700 dark:bg-green-900/20 dark:text-green-400"
+                        : article.status === "draft"
+                        ? "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/20 dark:text-yellow-400"
                         : "bg-red-100 text-red-700 dark:bg-red-900/20 dark:text-red-400"
                     }
                   >
-                    {project.status === "published" ? "Terpublikasi" : "Diblokir"}
+                    {article.status === "published"
+                      ? "Terpublikasi"
+                      : article.status === "draft"
+                      ? "Draft"
+                      : "Diblokir"}
                   </Badge>
                 </TableCell>
                 <TableCell>
                   <div className="flex items-center justify-end gap-2">
-                    <Link href={`/project/${project.id}`}>
+                    <Link href={`/articles/${article.id}`}>
                       <Button
                         size="sm"
                         variant="ghost"
                         className="hover:text-blue-600"
-                        title="Lihat Proyek"
+                        title="Lihat Artikel"
                       >
                         <Eye className="w-4 h-4" />
                       </Button>
                     </Link>
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      onClick={() => handleToggleFeatured(project.id)}
-                      className="hover:text-yellow-600"
-                      title="Jadikan Unggulan"
-                    >
-                      <Star className="w-4 h-4" />
-                    </Button>
-                    {project.status === "published" ? (
+                    {article.status === "published" ? (
                       <Button
                         size="sm"
                         variant="ghost"
-                        onClick={() => openBlockModal(project)}
+                        onClick={() => openBlockModal(article)}
                         className="hover:text-red-600"
-                        title="Blokir Proyek"
+                        title="Blokir Artikel"
                       >
                         <Ban className="w-4 h-4" />
                       </Button>
-                    ) : (
+                    ) : article.status === "blocked" ? (
                       <Button
                         size="sm"
                         variant="ghost"
                         onClick={() =>
-                          handleUnblockProject(project.id, project.title)
+                          handleUnblockArticle(article.id, article.title)
                         }
                         className="hover:text-green-600"
                         title="Buka Blokir"
                       >
                         <CheckCircle className="w-4 h-4" />
                       </Button>
-                    )}
+                    ) : null}
                     <Button
                       size="sm"
                       variant="ghost"
-                      onClick={() => openDeleteModal(project)}
+                      onClick={() => openDeleteModal(article)}
                       className="hover:text-red-600"
-                      title="Hapus Proyek"
+                      title="Hapus Artikel"
                     >
                       <Trash2 className="w-4 h-4" />
                     </Button>
@@ -269,32 +282,31 @@ export default function ProjectsManagementPage() {
         </Table>
       </div>
 
-      {filteredProjects.length === 0 && (
+      {filteredArticles.length === 0 && (
         <div className="text-center py-12 text-zinc-500">
-          Tidak ada proyek yang ditemukan sesuai pencarian Anda.
+          Tidak ada artikel yang ditemukan sesuai pencarian Anda.
         </div>
       )}
 
       {/* Modals */}
-      {selectedProject && (
+      {selectedArticle && (
         <>
           <ConfirmDeleteModal
             isOpen={isDeleteModalOpen}
             onClose={() => setIsDeleteModalOpen(false)}
-            onConfirm={handleDeleteProject}
-            title="Hapus Proyek"
-            itemName={selectedProject.title}
+            onConfirm={handleDeleteArticle}
+            title="Hapus Artikel"
+            itemName={selectedArticle.title}
           />
-          <BlockProjectModal
+          <BlockArticleModal
             isOpen={isBlockModalOpen}
             onClose={() => setIsBlockModalOpen(false)}
-            projectId={selectedProject.id}
-            projectTitle={selectedProject.title}
-            onBlock={handleBlockProject}
+            articleId={selectedArticle.id}
+            articleTitle={selectedArticle.title}
+            onBlock={handleBlockArticle}
           />
         </>
       )}
     </div>
   );
 }
-

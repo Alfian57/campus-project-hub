@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Rocket, Users, Heart, TrendingUp, Shield, Zap } from "lucide-react";
+import { Rocket, Users, ShoppingBag, TrendingUp, Shield, Zap } from "lucide-react";
 
 const features = [
   {
@@ -15,9 +15,9 @@ const features = [
     description: "Terima masukan berharga dari sesama mahasiswa dan profesional industri",
   },
   {
-    icon: Heart,
-    title: "Raih Dukungan",
-    description: "Dapatkan dukungan finansial dari orang-orang yang mengapresiasi karyamu",
+    icon: ShoppingBag,
+    title: "Jual Proyekmu",
+    description: "Monetisasi karya terbaikmu dengan menjual akses ke source code",
   },
   {
     icon: TrendingUp,
@@ -27,12 +27,12 @@ const features = [
   {
     icon: Shield,
     title: "Pembayaran Aman",
-    description: "Sistem donasi yang aman dan terpercaya didukung oleh Midtrans",
+    description: "Sistem pembayaran yang aman dan terpercaya didukung oleh Midtrans",
   },
   {
     icon: Zap,
     title: "Notifikasi Real-time",
-    description: "Notifikasi instan untuk suka, komentar, dan donasi",
+    description: "Notifikasi instan untuk suka, komentar, dan pembelian",
   },
 ];
 

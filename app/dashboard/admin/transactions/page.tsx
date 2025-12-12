@@ -82,7 +82,7 @@ export default function TransactionsPage() {
             <TableRow>
               <TableHead>ID</TableHead>
               <TableHead>Proyek</TableHead>
-              <TableHead>Donatur</TableHead>
+              <TableHead>Pembeli</TableHead>
               <TableHead>Jumlah</TableHead>
               <TableHead>Status</TableHead>
               <TableHead>Tanggal</TableHead>
@@ -102,7 +102,7 @@ export default function TransactionsPage() {
                   </div>
                 </TableCell>
                 <TableCell>
-                  <div className="text-sm">{transaction.donorName}</div>
+                  <div className="text-sm">{transaction.buyerName}</div>
                 </TableCell>
                 <TableCell>
                   <div className="font-semibold text-green-600">

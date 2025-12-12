@@ -13,7 +13,10 @@ let mockCurrentUser: User | null = {
   joinedAt: new Date("2024-01-15"),
   projectCount: 3,
   totalLikes: 45,
-  totalDonations: 250000,
+  totalSales: 250000,
+  totalExp: 1250,
+  bio: "Passionate developer specializing in web and mobile development. Love to build innovative solutions.",
+  phone: "+62812345678",
 };
 
 /**

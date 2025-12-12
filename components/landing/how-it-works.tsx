@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Upload, MessageSquare, DollarSign } from "lucide-react";
+import { Upload, MessageSquare, ShoppingBag } from "lucide-react";
 
 const steps = [
   {
@@ -18,9 +18,9 @@ const steps = [
   },
   {
     number: "03",
-    icon: DollarSign,
-    title: "Raih Dukungan",
-    description: "Dapatkan dukungan finansial dari orang-orang yang mengapresiasi karyamu melalui sistem donasi yang aman",
+    icon: ShoppingBag,
+    title: "Jual & Monetisasi",
+    description: "Monetisasi proyekmu dengan menjual akses ke source code melalui sistem pembayaran yang aman",
   },
 ];
 

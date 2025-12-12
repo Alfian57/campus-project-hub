@@ -29,7 +29,7 @@ export async function createTransaction(
     });
 
     // Generate unique order ID
-    const orderId = `DONATION-${projectId}-${Date.now()}`;
+    const orderId = `PURCHASE-${projectId}-${Date.now()}`;
 
     // Create transaction parameters
     const parameter = {
@@ -45,12 +45,12 @@ export async function createTransaction(
           id: projectId,
           price: amount,
           quantity: 1,
-          name: "Project Support",
+          name: "Project Source Code",
         },
       ],
       customer_details: {
-        first_name: "Anonymous",
-        email: "supporter@campus-hub.com",
+        first_name: "Buyer",
+        email: "buyer@campus-hub.com",
       },
     };
 

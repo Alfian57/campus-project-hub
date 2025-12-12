@@ -16,6 +16,7 @@ import { Input } from "@/components/ui/input";
 import { Shield, Ban, CheckCircle, Edit, Trash2, Search } from "lucide-react";
 import { BlockUserModal } from "@/components/admin/block-user-modal";
 import { EditRoleModal } from "@/components/admin/edit-role-modal";
+import { ConfirmDeleteModal } from "@/components/admin/confirm-delete-modal";
 import { User, UserRole } from "@/types/dashboard";
 import { toast } from "sonner";
 
@@ -31,6 +32,7 @@ export default function UsersManagementPage() {
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [isBlockModalOpen, setIsBlockModalOpen] = useState(false);
   const [isEditRoleModalOpen, setIsEditRoleModalOpen] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
 
   const filteredUsers = users.filter(
     (user) =>
@@ -62,10 +64,15 @@ export default function UsersManagementPage() {
     );
   };
 
-  const handleDeleteUser = (userId: string, userName: string) => {
-    if (confirm(`Yakin ingin menghapus ${userName}? Tindakan ini tidak dapat dibatalkan.`)) {
-      setUsers((prev) => prev.filter((user) => user.id !== userId));
-      toast.success(`Pengguna ${userName} telah dihapus`);
+  const openDeleteModal = (user: User) => {
+    setSelectedUser(user);
+    setIsDeleteModalOpen(true);
+  };
+
+  const handleDeleteUser = () => {
+    if (selectedUser) {
+      setUsers((prev) => prev.filter((user) => user.id !== selectedUser.id));
+      toast.success(`Pengguna ${selectedUser.name} telah dihapus`);
     }
   };
 
@@ -233,7 +240,7 @@ export default function UsersManagementPage() {
                     <Button
                       size="sm"
                       variant="ghost"
-                      onClick={() => handleDeleteUser(user.id, user.name)}
+                      onClick={() => openDeleteModal(user)}
                       className="hover:text-red-600"
                       title="Hapus Pengguna"
                     >
@@ -271,8 +278,16 @@ export default function UsersManagementPage() {
             currentRole={selectedUser.role}
             onUpdate={handleUpdateRole}
           />
+          <ConfirmDeleteModal
+            isOpen={isDeleteModalOpen}
+            onClose={() => setIsDeleteModalOpen(false)}
+            onConfirm={handleDeleteUser}
+            title="Hapus Pengguna"
+            itemName={selectedUser.name}
+          />
         </>
       )}
     </div>
   );
 }
+
