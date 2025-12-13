@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
-import { mockProjects } from "@/lib/mock-data";
-import { mockCategories } from "@/lib/mock-dashboard-data";
+import { useState, useEffect } from "react";
+import { projectsService } from "@/lib/services/projects";
+import { categoriesService } from "@/lib/services/categories";
+import { ProjectApiResponse, CategoryApiResponse } from "@/types/api";
 import {
   Table,
   TableBody,
@@ -14,64 +15,106 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Ban, CheckCircle, Eye, Trash2, Search, Star } from "lucide-react";
-import { Project } from "@/types";
+import { Ban, CheckCircle, Eye, Trash2, Search, Star, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import Link from "next/link";
 import { ConfirmDeleteModal } from "@/components/admin/confirm-delete-modal";
 import { BlockProjectModal } from "@/components/admin/block-project-modal";
 
-type ProjectWithStatus = Project & { status: "published" | "blocked" };
-
 export default function ProjectsManagementPage() {
-  const [projects, setProjects] = useState<ProjectWithStatus[]>(
-    mockProjects.map((p) => ({ ...p, status: "published" as const }))
-  );
+  const [projects, setProjects] = useState<ProjectApiResponse[]>([]);
+  const [categories, setCategories] = useState<CategoryApiResponse[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedProject, setSelectedProject] = useState<ProjectWithStatus | null>(null);
+  const [categoryFilter, setCategoryFilter] = useState("");
+  const [selectedProject, setSelectedProject] = useState<ProjectApiResponse | null>(null);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isBlockModalOpen, setIsBlockModalOpen] = useState(false);
 
-  const filteredProjects = projects.filter(
-    (project) =>
-      project.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      project.description.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  useEffect(() => {
+    fetchData();
+  }, []);
 
-  const openBlockModal = (project: ProjectWithStatus) => {
+  const fetchData = async () => {
+    try {
+      const [projectsData, categoriesData] = await Promise.all([
+        projectsService.getProjects({ perPage: 100 }),
+        categoriesService.getCategories(),
+      ]);
+      setProjects(projectsData.items);
+      setCategories(categoriesData);
+    } catch (error) {
+      console.error("Error fetching data:", error);
+      toast.error("Gagal memuat data");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const filteredProjects = projects.filter((project) => {
+    const matchesSearch =
+      project.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (project.description || "").toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesCategory = !categoryFilter || project.categoryId === categoryFilter;
+    return matchesSearch && matchesCategory;
+  });
+
+  const openBlockModal = (project: ProjectApiResponse) => {
     setSelectedProject(project);
     setIsBlockModalOpen(true);
   };
 
-  const handleBlockProject = (projectId: string, reason: string) => {
-    setProjects((prev) =>
-      prev.map((p) => (p.id === projectId ? { ...p, status: "blocked" } : p))
-    );
+  const handleBlockProject = async (projectId: string, reason: string) => {
+    try {
+      await projectsService.blockProject(projectId, reason);
+      setProjects((prev) =>
+        prev.map((p) => (p.id === projectId ? { ...p, status: "blocked" } : p))
+      );
+      toast.success("Proyek berhasil diblokir");
+    } catch (error) {
+      console.error("Error blocking project:", error);
+      toast.error("Gagal memblokir proyek");
+    }
   };
 
-  const handleUnblockProject = (projectId: string, projectTitle: string) => {
-    setProjects((prev) =>
-      prev.map((p) => (p.id === projectId ? { ...p, status: "published" } : p))
-    );
-    toast.success(`Proyek "${projectTitle}" telah dibuka blokirnya`);
+  const handleUnblockProject = async (projectId: string, projectTitle: string) => {
+    try {
+      await projectsService.unblockProject(projectId);
+      setProjects((prev) =>
+        prev.map((p) => (p.id === projectId ? { ...p, status: "published" } : p))
+      );
+      toast.success(`Proyek "${projectTitle}" telah dibuka blokirnya`);
+    } catch (error) {
+      console.error("Error unblocking project:", error);
+      toast.error("Gagal membuka blokir proyek");
+    }
   };
 
-  const openDeleteModal = (project: ProjectWithStatus) => {
+  const openDeleteModal = (project: ProjectApiResponse) => {
     setSelectedProject(project);
     setIsDeleteModalOpen(true);
   };
 
-  const handleDeleteProject = () => {
-    if (selectedProject) {
+  const handleDeleteProject = async () => {
+    if (!selectedProject) return;
+    
+    try {
+      await projectsService.deleteProject(selectedProject.id);
       setProjects((prev) => prev.filter((p) => p.id !== selectedProject.id));
       toast.success(`Proyek "${selectedProject.title}" telah dihapus`);
+    } catch (error) {
+      console.error("Error deleting project:", error);
+      toast.error("Gagal menghapus proyek");
     }
   };
 
-  const handleToggleFeatured = (projectId: string) => {
-    // Mock implementation
-    toast.success("Status unggulan diubah");
-  };
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <Loader2 className="w-8 h-8 text-blue-500 animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -96,9 +139,13 @@ export default function ProjectsManagementPage() {
             className="pl-10"
           />
         </div>
-        <select className="h-10 px-3 rounded-md border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900">
+        <select 
+          value={categoryFilter}
+          onChange={(e) => setCategoryFilter(e.target.value)}
+          className="h-10 px-3 rounded-md border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900"
+        >
           <option value="">Semua Kategori</option>
-          {mockCategories.map((cat) => (
+          {categories.map((cat) => (
             <option key={cat.id} value={cat.id}>
               {cat.name}
             </option>
@@ -109,9 +156,7 @@ export default function ProjectsManagementPage() {
       {/* Stats */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div className="p-4 rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900">
-          <p className="text-sm text-zinc-600 dark:text-zinc-400">
-            Total Proyek
-          </p>
+          <p className="text-sm text-zinc-600 dark:text-zinc-400">Total Proyek</p>
           <p className="text-2xl font-bold text-zinc-900 dark:text-zinc-50">
             {projects.length}
           </p>
@@ -150,7 +195,7 @@ export default function ProjectsManagementPage() {
                 <TableCell>
                   <div className="flex items-center gap-3">
                     <img
-                      src={project.thumbnailUrl}
+                      src={project.thumbnailUrl || "/placeholder.jpg"}
                       alt={project.title}
                       className="w-16 h-12 rounded-lg object-cover"
                     />
@@ -159,7 +204,7 @@ export default function ProjectsManagementPage() {
                         {project.title}
                       </div>
                       <div className="text-sm text-zinc-500">
-                        {project.description.slice(0, 40)}...
+                        {(project.description || "").slice(0, 40)}...
                       </div>
                     </div>
                   </div>
@@ -167,30 +212,26 @@ export default function ProjectsManagementPage() {
                 <TableCell>
                   <div className="flex items-center gap-2">
                     <img
-                      src={project.author.avatarUrl}
+                      src={project.author.avatarUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${project.author.name}`}
                       alt={project.author.name}
                       className="w-8 h-8 rounded-full"
                     />
                     <div>
-                      <div className="text-sm font-medium">
-                        {project.author.name}
-                      </div>
-                      <div className="text-xs text-zinc-500">
-                        {project.author.university}
-                      </div>
+                      <div className="text-sm font-medium">{project.author.name}</div>
+                      <div className="text-xs text-zinc-500">{project.author.university || ""}</div>
                     </div>
                   </div>
                 </TableCell>
                 <TableCell>
                   <div className="flex gap-1">
-                    {project.techStack.slice(0, 2).map((tech) => (
+                    {(project.techStack || []).slice(0, 2).map((tech) => (
                       <Badge key={tech} variant="secondary" className="text-xs">
                         {tech}
                       </Badge>
                     ))}
-                    {project.techStack.length > 2 && (
+                    {(project.techStack || []).length > 2 && (
                       <Badge variant="secondary" className="text-xs">
-                        +{project.techStack.length - 2}
+                        +{(project.techStack || []).length - 2}
                       </Badge>
                     )}
                   </div>
@@ -211,31 +252,16 @@ export default function ProjectsManagementPage() {
                 <TableCell>
                   <div className="flex items-center justify-end gap-2">
                     <Link href={`/project/${project.id}`}>
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        className="hover:text-blue-600"
-                        title="Lihat Proyek"
-                      >
+                      <Button size="sm" variant="ghost" className="hover:text-blue-600">
                         <Eye className="w-4 h-4" />
                       </Button>
                     </Link>
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      onClick={() => handleToggleFeatured(project.id)}
-                      className="hover:text-yellow-600"
-                      title="Jadikan Unggulan"
-                    >
-                      <Star className="w-4 h-4" />
-                    </Button>
                     {project.status === "published" ? (
                       <Button
                         size="sm"
                         variant="ghost"
                         onClick={() => openBlockModal(project)}
                         className="hover:text-red-600"
-                        title="Blokir Proyek"
                       >
                         <Ban className="w-4 h-4" />
                       </Button>
@@ -243,11 +269,8 @@ export default function ProjectsManagementPage() {
                       <Button
                         size="sm"
                         variant="ghost"
-                        onClick={() =>
-                          handleUnblockProject(project.id, project.title)
-                        }
+                        onClick={() => handleUnblockProject(project.id, project.title)}
                         className="hover:text-green-600"
-                        title="Buka Blokir"
                       >
                         <CheckCircle className="w-4 h-4" />
                       </Button>
@@ -257,7 +280,6 @@ export default function ProjectsManagementPage() {
                       variant="ghost"
                       onClick={() => openDeleteModal(project)}
                       className="hover:text-red-600"
-                      title="Hapus Proyek"
                     >
                       <Trash2 className="w-4 h-4" />
                     </Button>
@@ -297,4 +319,3 @@ export default function ProjectsManagementPage() {
     </div>
   );
 }
-

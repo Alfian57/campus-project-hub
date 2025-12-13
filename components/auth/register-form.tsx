@@ -7,9 +7,14 @@ import * as z from "zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Eye, EyeOff, Github, Mail } from "lucide-react";
+import { Eye, EyeOff, Github, Mail, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/components/providers/AuthContext";
+import { ApiError } from "@/lib/api";
+
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/v1";
 
 const registerSchema = z.object({
   name: z.string().min(2, "Nama minimal 2 karakter"),
@@ -20,6 +25,8 @@ const registerSchema = z.object({
     .regex(/[A-Z]/, "Password harus mengandung huruf besar")
     .regex(/[0-9]/, "Password harus mengandung angka"),
   confirmPassword: z.string(),
+  university: z.string().optional(),
+  major: z.string().optional(),
   agreeTerms: z.boolean().refine((val) => val === true, {
     message: "Anda harus menyetujui syarat dan ketentuan",
   }),
@@ -34,12 +41,15 @@ export function RegisterForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const router = useRouter();
+  const { register: registerUser } = useAuth();
 
   const {
     register,
     handleSubmit,
     formState: { errors },
     watch,
+    setError,
   } = useForm<RegisterFormData>({
     resolver: zodResolver(registerSchema),
   });
@@ -59,16 +69,35 @@ export function RegisterForm() {
 
   const onSubmit = async (data: RegisterFormData) => {
     setIsLoading(true);
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1500));
-    toast.success("Pendaftaran berhasil! Selamat datang di Campus Hub.");
-    setIsLoading(false);
-    // TODO: Implement actual registration logic
+    try {
+      await registerUser({
+        name: data.name,
+        email: data.email,
+        password: data.password,
+        university: data.university,
+        major: data.major,
+      });
+      toast.success("Pendaftaran berhasil! Silakan login untuk melanjutkan.");
+      router.push("/login");
+    } catch (error) {
+      if (error instanceof ApiError) {
+        if (error.errors) {
+          Object.entries(error.errors).forEach(([field, message]) => {
+            setError(field as keyof RegisterFormData, { message });
+          });
+        } else {
+          toast.error(error.message || "Pendaftaran gagal");
+        }
+      } else {
+        toast.error("Terjadi kesalahan. Silakan coba lagi.");
+      }
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const handleSocialRegister = (provider: string) => {
-    toast.info(`Daftar dengan ${provider} akan segera tersedia`);
-    // TODO: Implement social registration
+  const handleSocialRegister = (provider: "google" | "github") => {
+    window.location.href = `${API_BASE_URL}/auth/${provider}`;
   };
 
   return (
@@ -102,6 +131,30 @@ export function RegisterForm() {
           {errors.email && (
             <p className="text-sm text-red-500">{errors.email.message}</p>
           )}
+        </div>
+
+        {/* University */}
+        <div className="space-y-2">
+          <Label htmlFor="university">Universitas (Opsional)</Label>
+          <Input
+            id="university"
+            type="text"
+            placeholder="Universitas Indonesia"
+            {...register("university")}
+            disabled={isLoading}
+          />
+        </div>
+
+        {/* Major */}
+        <div className="space-y-2">
+          <Label htmlFor="major">Jurusan (Opsional)</Label>
+          <Input
+            id="major"
+            type="text"
+            placeholder="Ilmu Komputer"
+            {...register("major")}
+            disabled={isLoading}
+          />
         </div>
 
         {/* Password */}
@@ -214,7 +267,14 @@ export function RegisterForm() {
           className="w-full bg-blue-600 hover:bg-blue-700 text-white"
           size="lg"
         >
-          {isLoading ? "Memproses..." : "Daftar Sekarang"}
+          {isLoading ? (
+            <>
+              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              Memproses...
+            </>
+          ) : (
+            "Daftar Sekarang"
+          )}
         </Button>
       </form>
 
@@ -224,7 +284,7 @@ export function RegisterForm() {
           <div className="w-full border-t border-zinc-200 dark:border-zinc-800" />
         </div>
         <div className="relative flex justify-center text-sm">
-          <span className="px-2 bg-white dark:bg-zinc-950 text-zinc-500">
+          <span className="px-2 bg-white dark:bg-zinc-900 text-zinc-500">
             Atau daftar dengan
           </span>
         </div>
@@ -235,7 +295,8 @@ export function RegisterForm() {
         <Button
           type="button"
           variant="outline"
-          onClick={() => handleSocialRegister("Google")}
+          onClick={() => handleSocialRegister("google")}
+          disabled={isLoading}
         >
           <Mail className="w-4 h-4 mr-2" />
           Google
@@ -243,7 +304,8 @@ export function RegisterForm() {
         <Button
           type="button"
           variant="outline"
-          onClick={() => handleSocialRegister("GitHub")}
+          onClick={() => handleSocialRegister("github")}
+          disabled={isLoading}
         >
           <Github className="w-4 h-4 mr-2" />
           GitHub

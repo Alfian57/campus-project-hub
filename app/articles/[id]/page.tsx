@@ -1,13 +1,49 @@
-import { mockArticles } from "@/lib/mock-data";
 import { Footer } from "@/components/footer";
+import { LandingHeader } from "@/components/landing/landing-header";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Sparkles, ArrowLeft, Clock, Calendar, Share2, BookOpen } from "lucide-react";
+import { ArrowLeft, Clock, Calendar, Share2, BookOpen } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import { notFound } from "next/navigation";
+import { ArticleApiResponse } from "@/types/api";
+
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/v1";
+
+async function getArticle(id: string): Promise<ArticleApiResponse | null> {
+  try {
+    const response = await fetch(`${API_BASE_URL}/articles/${id}`, {
+      next: { revalidate: 30 },
+    });
+    
+    if (!response.ok) return null;
+    
+    const data = await response.json();
+    return data.success ? data.data : null;
+  } catch (error) {
+    console.error("Error fetching article:", error);
+    return null;
+  }
+}
+
+async function getRelatedArticles(category: string, excludeId: string): Promise<ArticleApiResponse[]> {
+  try {
+    const response = await fetch(`${API_BASE_URL}/articles?category=${encodeURIComponent(category)}&perPage=3&status=published`, {
+      next: { revalidate: 60 },
+    });
+    
+    if (!response.ok) return [];
+    
+    const data = await response.json();
+    const items = data.success ? data.data?.items || [] : [];
+    return items.filter((a: ArticleApiResponse) => a.id !== excludeId).slice(0, 2);
+  } catch (error) {
+    console.error("Error fetching related articles:", error);
+    return [];
+  }
+}
 
 interface ArticleDetailPageProps {
   params: Promise<{ id: string }>;
@@ -15,11 +51,38 @@ interface ArticleDetailPageProps {
 
 export default async function ArticleDetailPage({ params }: ArticleDetailPageProps) {
   const { id } = await params;
-  const article = mockArticles.find((a) => a.id === id);
+  const apiArticle = await getArticle(id);
 
-  if (!article) {
+  if (!apiArticle) {
     notFound();
   }
+
+  // Convert API response to expected format
+  const article = {
+    id: apiArticle.id,
+    title: apiArticle.title,
+    excerpt: apiArticle.excerpt,
+    content: apiArticle.content,
+    thumbnailUrl: apiArticle.thumbnailUrl || "/placeholder-article.jpg",
+    category: apiArticle.category || "Umum",
+    readingTime: apiArticle.readingTime || 5,
+    publishedAt: new Date(apiArticle.createdAt),
+    author: {
+      id: apiArticle.author.id,
+      name: apiArticle.author.name,
+      avatarUrl: apiArticle.author.avatarUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${apiArticle.author.name}`,
+      university: apiArticle.author.university || undefined,
+      major: apiArticle.author.major || undefined,
+    },
+  };
+
+  const apiRelated = await getRelatedArticles(article.category, id);
+  const relatedArticles = apiRelated.map((a) => ({
+    id: a.id,
+    title: a.title,
+    thumbnailUrl: a.thumbnailUrl || "/placeholder-article.jpg",
+    readingTime: a.readingTime || 5,
+  }));
 
   const formattedDate = new Intl.DateTimeFormat("id-ID", {
     day: "numeric",
@@ -27,74 +90,10 @@ export default async function ArticleDetailPage({ params }: ArticleDetailPagePro
     year: "numeric",
   }).format(article.publishedAt);
 
-  // Get related articles (same category, excluding current)
-  const relatedArticles = mockArticles
-    .filter((a) => a.id !== id && a.category === article.category)
-    .slice(0, 2);
-
   return (
     <div className="min-h-screen bg-zinc-950">
       {/* Sticky Header */}
-      <header className="border-b border-zinc-800 bg-zinc-950/80 backdrop-blur-sm sticky top-0 z-50">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            {/* Logo */}
-            <Link href="/" className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-cyan-600 rounded-lg flex items-center justify-center shadow-md shadow-blue-500/20">
-                <Sparkles className="w-6 h-6 text-white" />
-              </div>
-              <div>
-                <h1 className="text-xl font-bold text-zinc-50">Campus Hub</h1>
-              </div>
-            </Link>
-
-            {/* Navigation */}
-            <div className="hidden md:flex items-center gap-6">
-              <Link
-                href="/#features"
-                className="text-sm font-medium text-zinc-400 hover:text-zinc-100 transition-colors"
-              >
-                Fitur
-              </Link>
-              <Link
-                href="/#how-it-works"
-                className="text-sm font-medium text-zinc-400 hover:text-zinc-100 transition-colors"
-              >
-                Cara Kerja
-              </Link>
-              <Link
-                href="/projects"
-                className="text-sm font-medium text-zinc-400 hover:text-zinc-100 transition-colors"
-              >
-                Proyek
-              </Link>
-              <Link
-                href="/articles"
-                className="text-sm font-medium text-zinc-100 transition-colors"
-              >
-                Artikel
-              </Link>
-            </div>
-
-            {/* Auth Buttons */}
-            <div className="flex items-center gap-3">
-              <Link href="/login" className="hidden sm:block">
-                <Button
-                  variant="ghost"
-                  className="text-zinc-300 hover:text-white hover:bg-zinc-800"
-                >
-                  Masuk
-                </Button>
-              </Link>
-              <Link href="/register">
-                <Button className="bg-blue-600 hover:bg-blue-700 text-white">
-                  Daftar Gratis
-                </Button>
-              </Link>
-            </div>
-          </div>
-        </div>
-      </header>
+      <LandingHeader showArticlesActive />
 
       {/* Hero Section with Image */}
       <section className="relative">
@@ -105,6 +104,7 @@ export default async function ArticleDetailPage({ params }: ArticleDetailPagePro
             alt={article.title}
             fill
             className="object-cover"
+            unoptimized
           />
           <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/60 to-zinc-950/30" />
         </div>
@@ -259,6 +259,7 @@ export default async function ArticleDetailPage({ params }: ArticleDetailPagePro
                               alt={related.title}
                               fill
                               className="object-cover"
+                              unoptimized
                             />
                           </div>
                           <div>

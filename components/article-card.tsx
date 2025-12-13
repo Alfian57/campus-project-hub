@@ -29,6 +29,7 @@ export function ArticleCard({ article }: ArticleCardProps) {
             alt={article.title}
             fill
             className="object-cover transition-transform duration-500 group-hover:scale-105"
+            unoptimized
           />
           <div className="absolute inset-0 bg-gradient-to-t from-zinc-900 via-transparent to-transparent opacity-60" />
           

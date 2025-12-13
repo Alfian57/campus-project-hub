@@ -2,19 +2,12 @@
 
 import { revalidatePath } from "next/cache";
 
-// In-memory storage for likes (replace with database in production)
-const likesStore = new Map<string, number>();
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/v1";
 
 export async function toggleLike(projectId: string, currentLikes: number) {
   try {
-    // Get current likes from store or use the passed value
-    const storedLikes = likesStore.get(projectId) ?? currentLikes;
-    
-    // Toggle (increment for now, in real app you'd track user's like state)
-    const newLikes = storedLikes + 1;
-    
-    // Update store
-    likesStore.set(projectId, newLikes);
+    // Note: This requires authentication. For now, we'll handle this client-side.
+    // The token needs to be passed from the client or use cookies
     
     // Revalidate the page to show updated data
     revalidatePath("/");
@@ -22,7 +15,8 @@ export async function toggleLike(projectId: string, currentLikes: number) {
     
     return {
       success: true,
-      likes: newLikes,
+      likes: currentLikes + 1,
+      message: "Like requires authentication. Please use the client-side handler.",
     };
   } catch (error) {
     console.error("Toggle like error:", error);
@@ -39,8 +33,8 @@ export async function addComment(
   userId: string = "guest"
 ) {
   try {
-    // In a real app, save to database
-    // For now, just simulate success
+    // Note: This requires authentication. For now, we'll handle this client-side.
+    // The token needs to be passed from the client or use cookies
     
     revalidatePath(`/project/${projectId}`);
     
@@ -51,6 +45,7 @@ export async function addComment(
         content,
         createdAt: new Date(),
       },
+      message: "Comment requires authentication. Please use the client-side handler.",
     };
   } catch (error) {
     console.error("Add comment error:", error);

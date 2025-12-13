@@ -1,31 +1,94 @@
-import { getCurrentUser } from "@/lib/auth";
-import { mockArticles } from "@/lib/mock-data";
+"use client";
+
+import { useState, useEffect } from "react";
+import { useAuth } from "@/components/providers/AuthContext";
+import { articlesService } from "@/lib/services/articles";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import * as LucideIcons from "lucide-react";
 import { ACTION_POINTS } from "@/lib/config/gamification";
+import { ArticleApiResponse } from "@/types/api";
+import { toast } from "sonner";
+import { ConfirmDeleteModal } from "@/components/admin/confirm-delete-modal";
 
 export default function UserArticlesPage() {
-  const user = getCurrentUser();
+  const { user, isLoading: authLoading } = useAuth();
+  const [articles, setArticles] = useState<ArticleApiResponse[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  
+  // Delete modal state
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [articleToDelete, setArticleToDelete] = useState<ArticleApiResponse | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  useEffect(() => {
+    async function fetchArticles() {
+      if (!user) return;
+      
+      try {
+        const data = await articlesService.getArticles({ 
+          userId: user.id,
+          perPage: 50 
+        });
+        setArticles(data.items);
+      } catch (error) {
+        console.error("Error fetching articles:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+
+    if (user) {
+      fetchArticles();
+    }
+  }, [user]);
+
+  if (authLoading) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <LucideIcons.Loader2 className="w-8 h-8 text-blue-500 animate-spin" />
+      </div>
+    );
+  }
 
   if (!user) {
     redirect("/login");
   }
 
-  // Filter articles by current user (mock: using author name match)
-  const userArticles = mockArticles.filter(
-    (article) => article.author.name === user.name || article.author.id === user.id
-  );
-
-  const formatDate = (date: Date) => {
+  const formatDate = (dateStr: string) => {
     return new Intl.DateTimeFormat("id-ID", {
       day: "numeric",
       month: "long",
       year: "numeric",
-    }).format(date);
+    }).format(new Date(dateStr));
   };
+
+  const handleDeleteClick = (article: ArticleApiResponse) => {
+    setArticleToDelete(article);
+    setShowDeleteModal(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!articleToDelete) return;
+    
+    setIsDeleting(true);
+    try {
+      await articlesService.deleteArticle(articleToDelete.id);
+      setArticles(articles.filter(a => a.id !== articleToDelete.id));
+      toast.success("Artikel berhasil dihapus");
+      setShowDeleteModal(false);
+      setArticleToDelete(null);
+    } catch (error) {
+      console.error("Error deleting article:", error);
+      toast.error("Gagal menghapus artikel");
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  const totalViews = articles.reduce((sum, a) => sum + (a.viewCount || 0), 0);
 
   return (
     <div className="space-y-8">
@@ -54,7 +117,7 @@ export default function UserArticlesPage() {
             </div>
             <div>
               <p className="text-sm text-zinc-400">Total Artikel</p>
-              <p className="text-2xl font-bold text-zinc-50">{userArticles.length}</p>
+              <p className="text-2xl font-bold text-zinc-50">{articles.length}</p>
             </div>
           </div>
         </div>
@@ -76,25 +139,27 @@ export default function UserArticlesPage() {
             </div>
             <div>
               <p className="text-sm text-zinc-400">Total Views</p>
-              <p className="text-2xl font-bold text-zinc-50">
-                {userArticles.length * 120}
-              </p>
+              <p className="text-2xl font-bold text-zinc-50">{totalViews}</p>
             </div>
           </div>
         </div>
       </div>
 
       {/* Articles List */}
-      {userArticles.length > 0 ? (
+      {isLoading ? (
+        <div className="flex items-center justify-center py-12">
+          <LucideIcons.Loader2 className="w-8 h-8 text-blue-500 animate-spin" />
+        </div>
+      ) : articles.length > 0 ? (
         <div className="space-y-4">
-          {userArticles.map((article) => (
+          {articles.map((article) => (
             <div
               key={article.id}
               className="flex items-center gap-4 p-4 rounded-xl border border-zinc-800 bg-zinc-900/50 hover:bg-zinc-900 transition-colors"
             >
               {/* Thumbnail */}
               <img
-                src={article.thumbnailUrl}
+                src={article.thumbnailUrl || "/placeholder.jpg"}
                 alt={article.title}
                 className="w-24 h-16 rounded-lg object-cover flex-shrink-0"
               />
@@ -106,7 +171,18 @@ export default function UserArticlesPage() {
                     {article.title}
                   </h3>
                   <Badge variant="secondary" className="text-xs shrink-0">
-                    {article.category}
+                    {article.category || "Umum"}
+                  </Badge>
+                  <Badge 
+                    className={`text-xs shrink-0 ${
+                      article.status === "published" 
+                        ? "bg-green-500/20 text-green-400" 
+                        : article.status === "blocked"
+                        ? "bg-red-500/20 text-red-400"
+                        : "bg-yellow-500/20 text-yellow-400"
+                    }`}
+                  >
+                    {article.status === "published" ? "Terbit" : article.status === "blocked" ? "Diblokir" : "Draft"}
                   </Badge>
                 </div>
                 <p className="text-sm text-zinc-400 truncate">
@@ -115,11 +191,15 @@ export default function UserArticlesPage() {
                 <div className="flex items-center gap-4 mt-2 text-xs text-zinc-500">
                   <span className="flex items-center gap-1">
                     <LucideIcons.Calendar className="w-3.5 h-3.5" />
-                    {formatDate(article.publishedAt)}
+                    {formatDate(article.createdAt)}
                   </span>
                   <span className="flex items-center gap-1">
                     <LucideIcons.Clock className="w-3.5 h-3.5" />
-                    {article.readingTime} menit baca
+                    {article.readingTime || 5} menit baca
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <LucideIcons.Eye className="w-3.5 h-3.5" />
+                    {article.viewCount || 0} views
                   </span>
                 </div>
               </div>
@@ -132,6 +212,21 @@ export default function UserArticlesPage() {
                     Lihat
                   </Button>
                 </Link>
+                <Link href={`/dashboard/articles/${article.id}/edit`}>
+                  <Button variant="ghost" size="sm" className="gap-1 hover:text-blue-500">
+                    <LucideIcons.Edit className="w-4 h-4" />
+                    Edit
+                  </Button>
+                </Link>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="gap-1 hover:text-red-500"
+                  onClick={() => handleDeleteClick(article)}
+                >
+                  <LucideIcons.Trash2 className="w-4 h-4" />
+                  Hapus
+                </Button>
               </div>
             </div>
           ))}
@@ -171,6 +266,18 @@ export default function UserArticlesPage() {
           </div>
         </div>
       </div>
+
+      {/* Delete Confirmation Modal */}
+      <ConfirmDeleteModal
+        isOpen={showDeleteModal}
+        onClose={() => {
+          setShowDeleteModal(false);
+          setArticleToDelete(null);
+        }}
+        onConfirm={handleConfirmDelete}
+        title="Hapus Artikel"
+        itemName={articleToDelete?.title || ""}
+      />
     </div>
   );
 }

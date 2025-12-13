@@ -1,9 +1,72 @@
+"use client";
+
+import { useState, useEffect } from "react";
 import { StatsCard } from "@/components/dashboard/stats-card";
-import { mockAdminStats, mockUsers, mockTransactions } from "@/lib/mock-dashboard-data";
-import { Users, FolderKanban, Tags, DollarSign, UserCheck, UserX, Shield, TrendingUp } from "lucide-react";
+import { usersService } from "@/lib/services/users";
+import { projectsService } from "@/lib/services/projects";
+import { transactionsService } from "@/lib/services/transactions";
+import { categoriesService } from "@/lib/services/categories";
+import { Loader2 } from "lucide-react";
+import { UserApiResponse, TransactionApiResponse } from "@/types/api";
+import { formatCurrency } from "@/lib/utils/format";
 
 export default function AdminPage() {
-  const stats = mockAdminStats;
+  const [isLoading, setIsLoading] = useState(true);
+  const [stats, setStats] = useState({
+    totalUsers: 0,
+    activeUsers: 0,
+    blockedUsers: 0,
+    totalProjects: 0,
+    totalCategories: 0,
+    totalRevenue: 0,
+  });
+  const [recentUsers, setRecentUsers] = useState<UserApiResponse[]>([]);
+  const [recentTransactions, setRecentTransactions] = useState<TransactionApiResponse[]>([]);
+
+  useEffect(() => {
+    fetchAdminStats();
+  }, []);
+
+  const fetchAdminStats = async () => {
+    try {
+      const [usersData, projectsData, categoriesData, transactionsData] = await Promise.all([
+        usersService.getUsers({ perPage: 100 }),
+        projectsService.getProjects({ perPage: 1 }),
+        categoriesService.getCategories(),
+        transactionsService.getAdminTransactions({ perPage: 10 }),
+      ]);
+
+      const activeUsers = usersData.items.filter(u => u.status === "active").length;
+      const blockedUsers = usersData.items.filter(u => u.status === "blocked").length;
+      const totalRevenue = transactionsData.items
+        .filter(t => t.status === "success")
+        .reduce((sum, t) => sum + t.amount, 0);
+
+      setStats({
+        totalUsers: usersData.total,
+        activeUsers,
+        blockedUsers,
+        totalProjects: projectsData.total,
+        totalCategories: categoriesData.length,
+        totalRevenue,
+      });
+
+      setRecentUsers(usersData.items.slice(0, 5));
+      setRecentTransactions(transactionsData.items.slice(0, 5));
+    } catch (error) {
+      console.error("Error fetching admin stats:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <Loader2 className="w-8 h-8 text-blue-500 animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-8">
@@ -29,15 +92,13 @@ export default function AdminPage() {
             iconName="Users"
             description={`${stats.activeUsers} pengguna aktif`}
             color="blue"
-            trend={{ value: 12, isPositive: true }}
           />
           <StatsCard
             title="Total Proyek"
             value={stats.totalProjects}
             iconName="FolderKanban"
-            description={`${stats.activeProjects} terpublikasi`}
+            description="Proyek di platform"
             color="purple"
-            trend={{ value: 8, isPositive: true }}
           />
           <StatsCard
             title="Kategori"
@@ -48,11 +109,10 @@ export default function AdminPage() {
           />
           <StatsCard
             title="Total Pendapatan"
-            value={`Rp ${(stats.totalRevenue / 1000).toFixed(0)}K`}
+            value={formatCurrency(stats.totalRevenue)}
             iconName="DollarSign"
-            description={`Rp ${(stats.revenueThisMonth / 1000).toFixed(0)}K bulan ini`}
+            description="Dari transaksi"
             color="green"
-            trend={{ value: 15, isPositive: true }}
           />
         </div>
       </div>
@@ -77,21 +137,6 @@ export default function AdminPage() {
             description="Akun diblokir"
             color="red"
           />
-          <StatsCard
-            title="Moderator"
-            value={mockUsers.filter(u => u.role === "moderator").length}
-            iconName="Shield"
-            description="Moderator konten"
-            color="purple"
-          />
-          <StatsCard
-            title="Tingkat Pertumbuhan"
-            value="+18%"
-            iconName="TrendingUp"
-            description="Pengguna baru bulan ini"
-            color="blue"
-            trend={{ value: 18, isPositive: true }}
-          />
         </div>
       </div>
 
@@ -103,33 +148,37 @@ export default function AdminPage() {
             Transaksi Terbaru
           </h2>
           <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-6">
-            <div className="space-y-4">
-              {mockTransactions.slice(0, 5).map((transaction) => (
-                <div
-                  key={transaction.id}
-                  className="flex items-center justify-between py-3 border-b border-zinc-100 dark:border-zinc-800 last:border-0"
-                >
-                  <div>
-                    <p className="font-medium text-zinc-900 dark:text-zinc-50">
-                      {transaction.buyerName}
-                    </p>
-                    <p className="text-sm text-zinc-600 dark:text-zinc-400">
-                      {transaction.projectTitle}
-                    </p>
+            {recentTransactions.length > 0 ? (
+              <div className="space-y-4">
+                {recentTransactions.map((transaction) => (
+                  <div
+                    key={transaction.id}
+                    className="flex items-center justify-between py-3 border-b border-zinc-100 dark:border-zinc-800 last:border-0"
+                  >
+                    <div>
+                      <p className="font-medium text-zinc-900 dark:text-zinc-50">
+                        {transaction.buyerName}
+                      </p>
+                      <p className="text-sm text-zinc-600 dark:text-zinc-400">
+                        {transaction.projectTitle}
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <p className={`font-semibold ${
+                        transaction.status === "success" ? "text-green-600" : "text-yellow-600"
+                      }`}>
+                        {formatCurrency(transaction.amount)}
+                      </p>
+                      <p className="text-xs text-zinc-500 capitalize">
+                        {transaction.status === "success" ? "Berhasil" : transaction.status === "pending" ? "Menunggu" : "Gagal"}
+                      </p>
+                    </div>
                   </div>
-                  <div className="text-right">
-                    <p className={`font-semibold ${
-                      transaction.status === "success" ? "text-green-600" : "text-yellow-600"
-                    }`}>
-                      Rp {(transaction.amount / 1000).toFixed(0)}K
-                    </p>
-                    <p className="text-xs text-zinc-500 capitalize">
-                      {transaction.status === "success" ? "Berhasil" : transaction.status === "pending" ? "Menunggu" : "Gagal"}
-                    </p>
-                  </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-center text-zinc-500 py-4">Belum ada transaksi</p>
+            )}
           </div>
         </div>
 
@@ -139,39 +188,43 @@ export default function AdminPage() {
             Pengguna Terbaru
           </h2>
           <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-6">
-            <div className="space-y-4">
-              {mockUsers.slice(0, 5).map((user) => (
-                <div
-                  key={user.id}
-                  className="flex items-center justify-between py-3 border-b border-zinc-100 dark:border-zinc-800 last:border-0"
-                >
-                  <div className="flex items-center gap-3">
-                    <img
-                      src={user.avatarUrl}
-                      alt={user.name}
-                      className="w-10 h-10 rounded-full"
-                    />
-                    <div>
-                      <p className="font-medium text-zinc-900 dark:text-zinc-50">
-                        {user.name}
-                      </p>
-                      <p className="text-sm text-zinc-600 dark:text-zinc-400">
-                        {user.university}
+            {recentUsers.length > 0 ? (
+              <div className="space-y-4">
+                {recentUsers.map((user) => (
+                  <div
+                    key={user.id}
+                    className="flex items-center justify-between py-3 border-b border-zinc-100 dark:border-zinc-800 last:border-0"
+                  >
+                    <div className="flex items-center gap-3">
+                      <img
+                        src={user.avatarUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.name}`}
+                        alt={user.name}
+                        className="w-10 h-10 rounded-full"
+                      />
+                      <div>
+                        <p className="font-medium text-zinc-900 dark:text-zinc-50">
+                          {user.name}
+                        </p>
+                        <p className="text-sm text-zinc-600 dark:text-zinc-400">
+                          {user.university || "Belum diisi"}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <p className={`text-xs font-medium px-2 py-1 rounded ${
+                        user.status === "active" 
+                          ? "bg-green-100 text-green-700 dark:bg-green-900/20 dark:text-green-400"
+                          : "bg-red-100 text-red-700 dark:bg-red-900/20 dark:text-red-400"
+                      }`}>
+                        {user.status === "active" ? "Aktif" : "Diblokir"}
                       </p>
                     </div>
                   </div>
-                  <div className="text-right">
-                    <p className={`text-xs font-medium px-2 py-1 rounded ${
-                      user.status === "active" 
-                        ? "bg-green-100 text-green-700 dark:bg-green-900/20 dark:text-green-400"
-                        : "bg-red-100 text-red-700 dark:bg-red-900/20 dark:text-red-400"
-                    }`}>
-                      {user.status === "active" ? "Aktif" : "Diblokir"}
-                    </p>
-                  </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-center text-zinc-500 py-4">Belum ada pengguna</p>
+            )}
           </div>
         </div>
       </div>

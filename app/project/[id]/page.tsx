@@ -1,14 +1,46 @@
 import { notFound } from "next/navigation";
 import Image from "next/image";
-import { mockProjects, mockComments } from "@/lib/mock-data";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { CommentSection } from "@/components/comment-section";
 import { ImageCarousel } from "@/components/image-carousel";
-import { PurchaseModal } from "@/components/purchase-modal";
-import { Github, Globe, Eye, Heart, ArrowLeft, Lock, Crown } from "lucide-react";
+import { ProjectActionCard } from "@/components/project-action-card";
+import { Eye, Heart, ArrowLeft, Crown } from "lucide-react";
 import Link from "next/link";
+import { ProjectApiResponse, CommentApiResponse } from "@/types/api";
+
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/v1";
+
+async function getProject(id: string): Promise<ProjectApiResponse | null> {
+  try {
+    const response = await fetch(`${API_BASE_URL}/projects/${id}`, {
+      next: { revalidate: 30 },
+    });
+    
+    if (!response.ok) return null;
+    
+    const data = await response.json();
+    return data.success ? data.data : null;
+  } catch (error) {
+    console.error("Error fetching project:", error);
+    return null;
+  }
+}
+
+async function getComments(projectId: string): Promise<CommentApiResponse[]> {
+  try {
+    const response = await fetch(`${API_BASE_URL}/projects/${projectId}/comments?perPage=50`, {
+      next: { revalidate: 30 },
+    });
+    
+    if (!response.ok) return [];
+    
+    const data = await response.json();
+    return data.success ? data.data?.items || [] : [];
+  } catch (error) {
+    console.error("Error fetching comments:", error);
+    return [];
+  }
+}
 
 interface ProjectPageProps {
   params: Promise<{ id: string }>;
@@ -16,17 +48,27 @@ interface ProjectPageProps {
 
 export default async function ProjectPage({ params }: ProjectPageProps) {
   const { id } = await params;
-  const project = mockProjects.find((p) => p.id === id);
+  const project = await getProject(id);
 
   if (!project) {
     notFound();
   }
 
-  const comments = mockComments[id] || [];
+  const apiComments = await getComments(id);
   
-  // In production, this would check if the current user has purchased the project
-  const hasPurchased = false;
-  const canAccessSourceCode = project.type === "free" || hasPurchased;
+  // Convert API comments to the format expected by CommentSection
+  const comments = apiComments.map((c) => ({
+    id: c.id,
+    user: {
+      id: c.user.id,
+      name: c.user.name,
+      avatarUrl: c.user.avatarUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${c.user.name}`,
+      university: c.user.university || undefined,
+      major: c.user.major || undefined,
+    },
+    content: c.content,
+    createdAt: new Date(c.createdAt),
+  }));
 
   return (
     <div className="min-h-screen bg-zinc-950 relative overflow-hidden">
@@ -81,7 +123,7 @@ export default async function ProjectPage({ params }: ProjectPageProps) {
               <div className="flex items-center gap-3 mb-6">
                 <div className="relative w-12 h-12 rounded-full overflow-hidden bg-zinc-800">
                   <Image
-                    src={project.author.avatarUrl}
+                    src={project.author.avatarUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${project.author.name}`}
                     alt={project.author.name}
                     fill
                     className="object-cover"
@@ -93,7 +135,7 @@ export default async function ProjectPage({ params }: ProjectPageProps) {
                     {project.author.name}
                   </div>
                   <div className="text-sm text-zinc-400">
-                    {project.author.university} • {project.author.major}
+                    {project.author.university || "Unknown University"} • {project.author.major || "Unknown Major"}
                   </div>
                 </div>
               </div>
@@ -113,7 +155,7 @@ export default async function ProjectPage({ params }: ProjectPageProps) {
 
             {/* Project Images Carousel */}
             <ImageCarousel
-              images={project.images || [project.thumbnailUrl]}
+              images={project.images?.length ? project.images : (project.thumbnailUrl ? [project.thumbnailUrl] : [])}
               alt={project.title}
             />
 
@@ -123,7 +165,7 @@ export default async function ProjectPage({ params }: ProjectPageProps) {
                 Teknologi yang Digunakan
               </h3>
               <div className="flex flex-wrap gap-2">
-                {project.techStack.map((tech) => (
+                {(project.techStack || []).map((tech) => (
                   <Badge key={tech} variant="secondary" className="text-sm px-4 py-2 bg-zinc-800 text-zinc-300 border border-zinc-700">
                     {tech}
                   </Badge>
@@ -138,68 +180,17 @@ export default async function ProjectPage({ params }: ProjectPageProps) {
           {/* Sticky Action Box - Right Side */}
           <div className="lg:col-span-1">
             <div className="sticky top-24 space-y-4">
-              {/* External Links Card */}
-              <Card className="bg-zinc-900 border-zinc-800">
-                <CardContent className="p-6 space-y-3">
-                  <h3 className="font-semibold text-zinc-50 mb-4">
-                    Tautan Proyek
-                  </h3>
-                  
-                  {/* Demo Button - Always Available */}
-                  <a
-                    href={project.links.demo}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    <Button className="w-full bg-blue-600 hover:bg-blue-700" size="lg" variant="default">
-                      <Globe className="w-4 h-4 mr-2" />
-                      Lihat Demo
-                    </Button>
-                  </a>
-                  
-                  {/* Source Code Button - Conditional */}
-                  {canAccessSourceCode ? (
-                    <a
-                      href={project.links.github}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      <Button className="w-full border-zinc-700 text-zinc-300 hover:bg-zinc-800 mt-3" size="lg" variant="outline">
-                        <Github className="w-4 h-4 mr-2" />
-                        Lihat Kode Sumber
-                      </Button>
-                    </a>
-                  ) : (
-                    <div className="mt-3 space-y-3">
-                      {/* Locked Source Code Notice */}
-                      <div className="p-3 bg-zinc-800/50 rounded-lg border border-zinc-700">
-                        <div className="flex items-center gap-2 text-zinc-400 text-sm mb-2">
-                          <Lock className="w-4 h-4" />
-                          <span>Kode sumber terkunci</span>
-                        </div>
-                        <p className="text-xs text-zinc-500">
-                          Beli proyek ini untuk mendapatkan akses ke source code
-                        </p>
-                      </div>
-                      
-                      {/* Purchase Button */}
-                      <PurchaseModal
-                        projectId={project.id}
-                        projectTitle={project.title}
-                        price={project.price || 0}
-                      >
-                        <Button 
-                          className="w-full bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-semibold" 
-                          size="lg"
-                        >
-                          <Crown className="w-4 h-4 mr-2" />
-                          Beli - Rp {project.price?.toLocaleString("id-ID")}
-                        </Button>
-                      </PurchaseModal>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
+              <ProjectActionCard
+                projectId={project.id}
+                projectTitle={project.title}
+                projectType={project.type}
+                price={project.price || 0}
+                authorId={project.author.id}
+                links={{
+                  github: project.links.github,
+                  demo: project.links.demo,
+                }}
+              />
             </div>
           </div>
         </div>
@@ -207,4 +198,3 @@ export default async function ProjectPage({ params }: ProjectPageProps) {
     </div>
   );
 }
-

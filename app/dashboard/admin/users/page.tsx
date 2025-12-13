@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
-import { mockUsers } from "@/lib/mock-dashboard-data";
+import { useState, useEffect } from "react";
+import { usersService } from "@/lib/services/users";
+import { UserApiResponse } from "@/types/api";
 import {
   Table,
   TableBody,
@@ -13,12 +14,14 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Shield, Ban, CheckCircle, Edit, Trash2, Search } from "lucide-react";
+import { Shield, Ban, CheckCircle, Edit, Trash2, Search, Loader2 } from "lucide-react";
 import { BlockUserModal } from "@/components/admin/block-user-modal";
 import { EditRoleModal } from "@/components/admin/edit-role-modal";
 import { ConfirmDeleteModal } from "@/components/admin/confirm-delete-modal";
-import { User, UserRole } from "@/types/dashboard";
 import { toast } from "sonner";
+import { formatDate } from "@/lib/utils/format";
+
+type UserRole = "admin" | "moderator" | "user";
 
 const roleLabels: Record<UserRole, string> = {
   admin: "Admin",
@@ -27,74 +30,124 @@ const roleLabels: Record<UserRole, string> = {
 };
 
 export default function UsersManagementPage() {
-  const [users, setUsers] = useState<User[]>(mockUsers);
+  const [users, setUsers] = useState<UserApiResponse[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [selectedUser, setSelectedUser] = useState<UserApiResponse | null>(null);
   const [isBlockModalOpen, setIsBlockModalOpen] = useState(false);
   const [isEditRoleModalOpen, setIsEditRoleModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+
+  useEffect(() => {
+    fetchUsers();
+  }, []);
+
+  const fetchUsers = async () => {
+    try {
+      const data = await usersService.getUsers({ perPage: 100 });
+      setUsers(data.items);
+    } catch (error) {
+      console.error("Error fetching users:", error);
+      toast.error("Gagal memuat pengguna");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const filteredUsers = users.filter(
     (user) =>
       user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       user.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      user.university.toLowerCase().includes(searchQuery.toLowerCase())
+      (user.university || "").toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const handleBlockUser = (userId: string, reason: string) => {
-    setUsers((prev) =>
-      prev.map((user) =>
-        user.id === userId ? { ...user, status: "blocked" } : user
-      )
-    );
-  };
-
-  const handleUnblockUser = (userId: string) => {
-    setUsers((prev) =>
-      prev.map((user) =>
-        user.id === userId ? { ...user, status: "active" } : user
-      )
-    );
-    toast.success("Pengguna telah dibuka blokirnya");
-  };
-
-  const handleUpdateRole = (userId: string, newRole: UserRole) => {
-    setUsers((prev) =>
-      prev.map((user) => (user.id === userId ? { ...user, role: newRole } : user))
-    );
-  };
-
-  const openDeleteModal = (user: User) => {
-    setSelectedUser(user);
-    setIsDeleteModalOpen(true);
-  };
-
-  const handleDeleteUser = () => {
-    if (selectedUser) {
-      setUsers((prev) => prev.filter((user) => user.id !== selectedUser.id));
-      toast.success(`Pengguna ${selectedUser.name} telah dihapus`);
+  const handleBlockUser = async (userId: string, reason: string) => {
+    try {
+      await usersService.blockUser(userId, reason);
+      setUsers((prev) =>
+        prev.map((user) =>
+          user.id === userId ? { ...user, status: "blocked" } : user
+        )
+      );
+      toast.success("Pengguna berhasil diblokir");
+    } catch (error) {
+      console.error("Error blocking user:", error);
+      toast.error("Gagal memblokir pengguna");
     }
   };
 
-  const openBlockModal = (user: User) => {
+  const handleUnblockUser = async (userId: string) => {
+    try {
+      await usersService.unblockUser(userId);
+      setUsers((prev) =>
+        prev.map((user) =>
+          user.id === userId ? { ...user, status: "active" } : user
+        )
+      );
+      toast.success("Pengguna telah dibuka blokirnya");
+    } catch (error) {
+      console.error("Error unblocking user:", error);
+      toast.error("Gagal membuka blokir pengguna");
+    }
+  };
+
+  const handleUpdateRole = async (userId: string, newRole: UserRole) => {
+    try {
+      await usersService.updateUser(userId, { role: newRole } as any);
+      setUsers((prev) =>
+        prev.map((user) => (user.id === userId ? { ...user, role: newRole } : user))
+      );
+      toast.success("Role pengguna berhasil diubah");
+    } catch (error) {
+      console.error("Error updating role:", error);
+      toast.error("Gagal mengubah role pengguna");
+    }
+  };
+
+  const handleDeleteUser = async () => {
+    if (!selectedUser) return;
+    
+    try {
+      await usersService.deleteUser(selectedUser.id);
+      setUsers((prev) => prev.filter((user) => user.id !== selectedUser.id));
+      toast.success(`Pengguna ${selectedUser.name} telah dihapus`);
+    } catch (error) {
+      console.error("Error deleting user:", error);
+      toast.error("Gagal menghapus pengguna");
+    }
+  };
+
+  const openBlockModal = (user: UserApiResponse) => {
     setSelectedUser(user);
     setIsBlockModalOpen(true);
   };
 
-  const openEditRoleModal = (user: User) => {
+  const openEditRoleModal = (user: UserApiResponse) => {
     setSelectedUser(user);
     setIsEditRoleModalOpen(true);
   };
 
-  const getRoleBadge = (role: UserRole) => {
-    const colors = {
+  const openDeleteModal = (user: UserApiResponse) => {
+    setSelectedUser(user);
+    setIsDeleteModalOpen(true);
+  };
+
+  const getRoleBadge = (role: string) => {
+    const colors: Record<string, string> = {
       admin: "bg-red-100 text-red-700 dark:bg-red-900/20 dark:text-red-400",
-      moderator:
-        "bg-purple-100 text-purple-700 dark:bg-purple-900/20 dark:text-purple-400",
+      moderator: "bg-purple-100 text-purple-700 dark:bg-purple-900/20 dark:text-purple-400",
       user: "bg-blue-100 text-blue-700 dark:bg-blue-900/20 dark:text-blue-400",
     };
-    return colors[role];
+    return colors[role] || colors.user;
   };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <Loader2 className="w-8 h-8 text-blue-500 animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -119,9 +172,6 @@ export default function UsersManagementPage() {
             className="pl-10"
           />
         </div>
-        <Button variant="outline">
-          Filter
-        </Button>
       </div>
 
       {/* Stats */}
@@ -154,7 +204,7 @@ export default function UsersManagementPage() {
               <TableHead>Pengguna</TableHead>
               <TableHead>Role</TableHead>
               <TableHead>Universitas</TableHead>
-              <TableHead>Proyek</TableHead>
+              <TableHead>Level</TableHead>
               <TableHead>Status</TableHead>
               <TableHead>Bergabung</TableHead>
               <TableHead className="text-right">Aksi</TableHead>
@@ -166,7 +216,7 @@ export default function UsersManagementPage() {
                 <TableCell>
                   <div className="flex items-center gap-3">
                     <img
-                      src={user.avatarUrl}
+                      src={user.avatarUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.name}`}
                       alt={user.name}
                       className="w-10 h-10 rounded-full"
                     />
@@ -181,16 +231,16 @@ export default function UsersManagementPage() {
                 <TableCell>
                   <Badge className={getRoleBadge(user.role)}>
                     {user.role === "admin" && <Shield className="w-3 h-3 mr-1" />}
-                    {roleLabels[user.role]}
+                    {roleLabels[user.role as UserRole] || user.role}
                   </Badge>
                 </TableCell>
                 <TableCell>
                   <div className="text-sm">
-                    {user.university}
-                    <div className="text-xs text-zinc-500">{user.major}</div>
+                    {user.university || "-"}
+                    <div className="text-xs text-zinc-500">{user.major || ""}</div>
                   </div>
                 </TableCell>
-                <TableCell>{user.projectCount}</TableCell>
+                <TableCell>Lv. {user.level || 1}</TableCell>
                 <TableCell>
                   <Badge
                     className={
@@ -203,7 +253,7 @@ export default function UsersManagementPage() {
                   </Badge>
                 </TableCell>
                 <TableCell className="text-sm text-zinc-600 dark:text-zinc-400">
-                  {user.joinedAt.toLocaleDateString("id-ID")}
+                  {formatDate(user.createdAt)}
                 </TableCell>
                 <TableCell>
                   <div className="flex items-center justify-end gap-2">
@@ -275,7 +325,7 @@ export default function UsersManagementPage() {
             onClose={() => setIsEditRoleModalOpen(false)}
             userId={selectedUser.id}
             userName={selectedUser.name}
-            currentRole={selectedUser.role}
+            currentRole={selectedUser.role as UserRole}
             onUpdate={handleUpdateRole}
           />
           <ConfirmDeleteModal
@@ -290,4 +340,3 @@ export default function UsersManagementPage() {
     </div>
   );
 }
-

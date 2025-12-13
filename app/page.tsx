@@ -1,4 +1,3 @@
-import { mockProjects } from "@/lib/mock-data";
 import { ProjectCard } from "@/components/project-card";
 import { FeaturesSection } from "@/components/landing/features-section";
 import { HowItWorksSection } from "@/components/landing/how-it-works";
@@ -6,61 +5,43 @@ import { TestimonialsSection } from "@/components/landing/testimonials-section";
 import { ArticlesSection } from "@/components/landing/articles-section";
 import { CTASection } from "@/components/landing/cta-section";
 import { Footer } from "@/components/footer";
-import { Sparkles, Menu } from "lucide-react";
+import { LandingHeader } from "@/components/landing/landing-header";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
+import { ProjectApiResponse } from "@/types/api";
 
-export default function Home() {
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/v1";
+
+async function getProjects(): Promise<ProjectApiResponse[]> {
+  try {
+    const response = await fetch(`${API_BASE_URL}/projects?perPage=6`, {
+      next: { revalidate: 60 }, // Revalidate every 60 seconds
+    });
+    
+    if (!response.ok) {
+      console.error("Failed to fetch projects:", response.status);
+      return [];
+    }
+    
+    const data = await response.json();
+    return data.success ? data.data?.items || [] : [];
+  } catch (error) {
+    console.error("Error fetching projects:", error);
+    return [];
+  }
+}
+
+export default async function Home() {
+  const projects = await getProjects();
+  
+  // Calculate stats
+  const totalProjects = projects.length > 0 ? `${projects.length}+` : "100+";
+  const totalLikes = projects.reduce((sum, p) => sum + (p.stats?.likes || 0), 0);
+  
   return (
     <div className="min-h-screen bg-zinc-950">
       {/* Sticky Header */}
-      <header className="border-b border-zinc-800 bg-zinc-950/80 backdrop-blur-sm sticky top-0 z-50">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            {/* Logo */}
-            <Link href="/" className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-cyan-600 rounded-lg flex items-center justify-center shadow-md shadow-blue-500/20">
-                <Sparkles className="w-6 h-6 text-white" />
-              </div>
-              <div>
-                <h1 className="text-xl font-bold text-zinc-50">
-                  Campus Hub
-                </h1>
-              </div>
-            </Link>
-
-            {/* Navigation */}
-            <div className="hidden md:flex items-center gap-6">
-              <a href="#features" className="text-sm font-medium text-zinc-400 hover:text-zinc-100 transition-colors">
-                Fitur
-              </a>
-              <a href="#how-it-works" className="text-sm font-medium text-zinc-400 hover:text-zinc-100 transition-colors">
-                Cara Kerja
-              </a>
-              <a href="#projects" className="text-sm font-medium text-zinc-400 hover:text-zinc-100 transition-colors">
-                Proyek
-              </a>
-              <a href="#articles" className="text-sm font-medium text-zinc-400 hover:text-zinc-100 transition-colors">
-                Artikel
-              </a>
-            </div>
-
-            {/* Auth Buttons */}
-            <div className="flex items-center gap-3">
-              <Link href="/login" className="hidden sm:block">
-                <Button variant="ghost" className="text-zinc-400 hover:text-zinc-50 hover:bg-zinc-800/50">
-                  Masuk
-                </Button>
-              </Link>
-              <Link href="/register">
-                <Button className="bg-blue-600 hover:bg-blue-700 text-white">
-                  Daftar Gratis
-                </Button>
-              </Link>
-            </div>
-          </div>
-        </div>
-      </header>
+      <LandingHeader />
 
       {/* Hero Section */}
       <section className="relative py-20 md:py-32 overflow-hidden bg-gradient-to-br from-zinc-950 via-zinc-900 to-blue-950/30">
@@ -101,7 +82,7 @@ export default function Home() {
             <div className="grid grid-cols-3 gap-4 max-w-2xl mx-auto">
               <div className="text-center p-6 rounded-2xl bg-zinc-900/80 backdrop-blur-sm border border-zinc-800 shadow-lg shadow-blue-500/5">
                 <div className="text-3xl md:text-4xl font-bold text-blue-400 mb-1">
-                  {mockProjects.length}+
+                  {totalProjects}
                 </div>
                 <div className="text-sm text-zinc-400">
                   Proyek
@@ -109,7 +90,7 @@ export default function Home() {
               </div>
               <div className="text-center p-6 rounded-2xl bg-zinc-900/80 backdrop-blur-sm border border-zinc-800 shadow-lg shadow-blue-500/5">
                 <div className="text-3xl md:text-4xl font-bold text-blue-400 mb-1">
-                  {mockProjects.reduce((sum, p) => sum + p.stats.likes, 0)}
+                  {totalLikes || 500}+
                 </div>
                 <div className="text-sm text-zinc-400">
                   Total Suka
@@ -117,7 +98,7 @@ export default function Home() {
               </div>
               <div className="text-center p-6 rounded-2xl bg-zinc-900/80 backdrop-blur-sm border border-zinc-800 shadow-lg shadow-blue-500/5">
                 <div className="text-3xl md:text-4xl font-bold text-blue-400 mb-1">
-                  3
+                  10+
                 </div>
                 <div className="text-sm text-zinc-400">
                   Universitas
@@ -157,9 +138,36 @@ export default function Home() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {mockProjects.map((project) => (
-              <ProjectCard key={project.id} project={project} />
-            ))}
+            {projects.length > 0 ? (
+              projects.map((project) => (
+                <ProjectCard 
+                  key={project.id} 
+                  project={{
+                    id: project.id,
+                    title: project.title,
+                    description: project.description || "",
+                    thumbnailUrl: project.thumbnailUrl || "",
+                    images: project.images,
+                    techStack: project.techStack || [],
+                    links: project.links,
+                    stats: project.stats,
+                    type: project.type,
+                    price: project.price,
+                    author: {
+                      id: project.author.id,
+                      name: project.author.name,
+                      avatarUrl: project.author.avatarUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${project.author.name}`,
+                      university: project.author.university || undefined,
+                      major: project.author.major || undefined,
+                    },
+                  }} 
+                />
+              ))
+            ) : (
+              <div className="col-span-3 text-center py-12">
+                <p className="text-zinc-400 text-lg">Belum ada proyek yang tersedia</p>
+              </div>
+            )}
           </div>
 
           <div className="text-center mt-12">

@@ -1,15 +1,21 @@
 "use client";
 
 import { cn } from "@/lib/cn";
-import { User } from "@/types/dashboard";
-import { getLevelFromExp, getLevelTitle, getLevelColor } from "@/lib/config/gamification";
+import { getLevelFromExp, getLevelColor } from "@/lib/config/gamification";
 import { motion } from "framer-motion";
 import * as LucideIcons from "lucide-react";
-import { formatCurrency } from "@/lib/mock-dashboard-data";
 import { LevelBadge } from "./level-badge";
 
+interface LeaderboardUser {
+  id: string;
+  name: string;
+  avatarUrl: string;
+  university?: string;
+  totalExp: number;
+}
+
 interface LeaderboardCardProps {
-  user: User;
+  user: LeaderboardUser;
   rank: number;
   isCurrentUser?: boolean;
   className?: string;
@@ -105,6 +111,9 @@ export function LeaderboardCard({
         </div>
         <div className="flex items-center gap-2">
           <LevelBadge totalExp={user.totalExp} size="sm" />
+          {user.university && (
+            <span className="text-xs text-zinc-500 truncate">{user.university}</span>
+          )}
         </div>
       </div>
 
@@ -113,15 +122,8 @@ export function LeaderboardCard({
         <div className={cn("text-lg font-bold", colors.text)}>
           {user.totalExp.toLocaleString()} EXP
         </div>
-        <div className="flex items-center gap-3 text-sm text-zinc-500">
-          <span className="flex items-center gap-1">
-            <LucideIcons.FolderKanban className="w-3.5 h-3.5" />
-            {user.projectCount}
-          </span>
-          <span className="flex items-center gap-1">
-            <LucideIcons.Heart className="w-3.5 h-3.5" />
-            {user.totalLikes}
-          </span>
+        <div className="text-sm text-zinc-500">
+          Level {level}
         </div>
       </div>
     </motion.div>

@@ -1,37 +1,53 @@
-import { getCurrentUser } from "@/lib/auth";
-import { formatDate, formatCurrency } from "@/lib/mock-dashboard-data";
-import { redirect } from "next/navigation";
+"use client";
+
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/components/providers/AuthContext";
+import { formatDate, formatCurrency } from "@/lib/utils/format";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { LevelBadge } from "@/components/dashboard/level-badge";
 import { ExpProgress } from "@/components/dashboard/exp-progress";
 import * as LucideIcons from "lucide-react";
+import { useEffect } from "react";
 
 export default function ProfilePage() {
-  const user = getCurrentUser();
+  const { user, isLoading, gamification } = useAuth();
+  const router = useRouter();
 
-  if (!user) {
-    redirect("/login");
+  useEffect(() => {
+    if (!isLoading && !user) {
+      router.push("/login");
+    }
+  }, [user, isLoading, router]);
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <LucideIcons.Loader2 className="w-8 h-8 text-blue-500 animate-spin" />
+      </div>
+    );
   }
+
+  if (!user) return null;
 
   const stats = [
     {
-      label: "Total Proyek",
-      value: user.projectCount,
-      icon: "FolderKanban",
+      label: "Total EXP",
+      value: (user.totalExp || 0).toLocaleString(),
+      icon: "Sparkles",
+      color: "text-yellow-400",
+    },
+    {
+      label: "Level",
+      value: user.level || gamification?.level || 1,
+      icon: "Trophy",
       color: "text-blue-400",
     },
     {
-      label: "Total Suka",
-      value: user.totalLikes,
-      icon: "Heart",
-      color: "text-red-400",
-    },
-    {
-      label: "Total Penjualan",
-      value: formatCurrency(user.totalSales),
-      icon: "DollarSign",
-      color: "text-green-400",
+      label: "Status",
+      value: user.status === "active" ? "Aktif" : "Diblokir",
+      icon: "Shield",
+      color: user.status === "active" ? "text-green-400" : "text-red-400",
     },
   ];
 
@@ -69,7 +85,7 @@ export default function ProfilePage() {
             {/* Avatar */}
             <div className="relative">
               <img
-                src={user.avatarUrl}
+                src={user.avatarUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.name}`}
                 alt={user.name}
                 className="w-32 h-32 rounded-2xl bg-zinc-800 border-4 border-zinc-900 shadow-xl"
               />
@@ -80,12 +96,12 @@ export default function ProfilePage() {
             <div className="flex-1 space-y-2 pb-2">
               <div className="flex items-center gap-3">
                 <h2 className="text-2xl font-bold text-zinc-50">{user.name}</h2>
-                <LevelBadge totalExp={user.totalExp} />
+                <LevelBadge totalExp={user.totalExp || 0} />
               </div>
               <p className="text-zinc-400">{user.email}</p>
               <div className="flex items-center gap-2 text-sm text-zinc-500">
                 <LucideIcons.GraduationCap className="w-4 h-4" />
-                <span>{user.major} • {user.university}</span>
+                <span>{user.major || "Belum diisi"} • {user.university || "Belum diisi"}</span>
               </div>
             </div>
           </div>
@@ -103,7 +119,7 @@ export default function ProfilePage() {
             <p className="text-sm text-zinc-500">Kumpulkan EXP untuk naik level</p>
           </div>
         </div>
-        <ExpProgress totalExp={user.totalExp} />
+        <ExpProgress totalExp={user.totalExp || 0} />
       </div>
 
       {/* Stats Grid */}
@@ -156,7 +172,7 @@ export default function ProfilePage() {
             <div className="flex items-center gap-3 text-sm">
               <LucideIcons.Calendar className="w-4 h-4 text-zinc-500" />
               <span className="text-zinc-400">
-                Bergabung {formatDate(user.joinedAt)}
+                Bergabung {formatDate(user.createdAt)}
               </span>
             </div>
             <div className="flex items-center gap-3 text-sm">

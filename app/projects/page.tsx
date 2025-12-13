@@ -1,37 +1,88 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
-import { mockProjects } from "@/lib/mock-data";
+import { projectsService } from "@/lib/services/projects";
 import { ProjectCard } from "@/components/project-card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ArrowLeft, Search, Filter } from "lucide-react";
+import { ArrowLeft, Search, Filter, Loader2 } from "lucide-react";
+import { ProjectApiResponse } from "@/types/api";
+import { Project } from "@/types";
 
 type FilterType = "all" | "free" | "paid";
+
+// Convert API response to Project type
+function mapApiToProject(apiProject: ProjectApiResponse): Project {
+  return {
+    id: apiProject.id,
+    title: apiProject.title,
+    description: apiProject.description || "",
+    thumbnailUrl: apiProject.thumbnailUrl || "",
+    images: apiProject.images,
+    techStack: apiProject.techStack || [],
+    links: apiProject.links,
+    stats: apiProject.stats,
+    type: apiProject.type,
+    price: apiProject.price,
+    author: {
+      id: apiProject.author.id,
+      name: apiProject.author.name,
+      avatarUrl: apiProject.author.avatarUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${apiProject.author.name}`,
+      university: apiProject.author.university || undefined,
+      major: apiProject.author.major || undefined,
+    },
+  };
+}
 
 export default function ProjectsPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [filter, setFilter] = useState<FilterType>("all");
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [totalCount, setTotalCount] = useState(0);
+  const [freeCount, setFreeCount] = useState(0);
+  const [paidCount, setPaidCount] = useState(0);
+  const [debouncedSearch, setDebouncedSearch] = useState("");
 
-  const filteredProjects = mockProjects.filter((project) => {
-    const matchesSearch =
-      project.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      project.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      project.techStack.some((tech) =>
-        tech.toLowerCase().includes(searchQuery.toLowerCase())
-      );
+  // Debounce search
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchQuery);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
 
-    const matchesFilter =
-      filter === "all" ||
-      (filter === "free" && project.type === "free") ||
-      (filter === "paid" && project.type === "paid");
+  const fetchProjects = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      const data = await projectsService.getProjects({
+        perPage: 50,
+        type: filter,
+        search: debouncedSearch || undefined,
+      });
+      
+      setProjects(data.items.map(mapApiToProject));
+      setTotalCount(data.total);
+      
+      // Count free and paid for filters
+      if (filter === "all" && !debouncedSearch) {
+        const freeData = await projectsService.getProjects({ type: "free", perPage: 1 });
+        const paidData = await projectsService.getProjects({ type: "paid", perPage: 1 });
+        setFreeCount(freeData.total);
+        setPaidCount(paidData.total);
+      }
+    } catch (error) {
+      console.error("Error fetching projects:", error);
+      setProjects([]);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [filter, debouncedSearch]);
 
-    return matchesSearch && matchesFilter;
-  });
-
-  const freeCount = mockProjects.filter((p) => p.type === "free").length;
-  const paidCount = mockProjects.filter((p) => p.type === "paid").length;
+  useEffect(() => {
+    fetchProjects();
+  }, [fetchProjects]);
 
   return (
     <div className="min-h-screen bg-zinc-950 relative overflow-hidden">
@@ -56,7 +107,7 @@ export default function ProjectsPage() {
                 Semua Proyek
               </h1>
               <p className="text-sm text-zinc-400">
-                {filteredProjects.length} proyek ditemukan
+                {isLoading ? "Memuat..." : `${projects.length} proyek ditemukan`}
               </p>
             </div>
           </div>
@@ -96,7 +147,7 @@ export default function ProjectsPage() {
                     : ""
                 }
               >
-                Semua ({mockProjects.length})
+                Semua ({totalCount || freeCount + paidCount})
               </Button>
               <Button
                 variant={filter === "free" ? "default" : "outline"}
@@ -127,9 +178,13 @@ export default function ProjectsPage() {
         </div>
 
         {/* Projects Grid */}
-        {filteredProjects.length > 0 ? (
+        {isLoading ? (
+          <div className="flex items-center justify-center py-20">
+            <Loader2 className="w-8 h-8 text-blue-500 animate-spin" />
+          </div>
+        ) : projects.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {filteredProjects.map((project) => (
+            {projects.map((project) => (
               <ProjectCard key={project.id} project={project} />
             ))}
           </div>

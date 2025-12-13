@@ -1,8 +1,10 @@
 "use client";
 
-import { useState } from "react";
-import { getCurrentUser } from "@/lib/auth";
-import { redirect, useRouter } from "next/navigation";
+import { useState, useEffect, useRef } from "react";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/components/providers/AuthContext";
+import { uploadFile } from "@/lib/services/upload";
+import { ApiError } from "@/lib/api";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,6 +12,9 @@ import { Label } from "@/components/ui/label";
 import * as LucideIcons from "lucide-react";
 import { ACTION_POINTS } from "@/lib/config/gamification";
 import { toast } from "sonner";
+import { articlesService } from "@/lib/services/articles";
+
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/v1";
 
 // Article categories
 const articleCategories = [
@@ -22,29 +27,57 @@ const articleCategories = [
 ];
 
 export default function NewArticlePage() {
-  const user = getCurrentUser();
+  const { user, isLoading: authLoading } = useAuth();
   const router = useRouter();
+  const thumbnailInputRef = useRef<HTMLInputElement>(null);
 
-  if (!user) {
-    redirect("/login");
-  }
+  useEffect(() => {
+    if (!authLoading && !user) {
+      router.push("/login");
+    }
+  }, [user, authLoading, router]);
 
   const [formData, setFormData] = useState({
     title: "",
     excerpt: "",
     category: "",
-    thumbnailUrl: "",
     content: "",
   });
 
+  // File state
+  const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
+  const [thumbnailPreview, setThumbnailPreview] = useState<string | null>(null);
+
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDraft, setIsDraft] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
   ) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
+    // Clear field error when user starts typing
+    if (fieldErrors[name]) {
+      setFieldErrors((prev) => ({ ...prev, [name]: "" }));
+    }
+  };
+
+  const handleThumbnailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setThumbnailFile(file);
+      const preview = URL.createObjectURL(file);
+      setThumbnailPreview(preview);
+    }
+  };
+
+  const removeThumbnail = () => {
+    setThumbnailFile(null);
+    setThumbnailPreview(null);
+    if (thumbnailInputRef.current) {
+      thumbnailInputRef.current.value = "";
+    }
   };
 
   const calculateReadingTime = (content: string): number => {
@@ -57,50 +90,92 @@ export default function NewArticlePage() {
     e.preventDefault();
     setIsDraft(saveAsDraft);
     setIsSubmitting(true);
+    setFieldErrors({});
 
     // Validate required fields
+    const errors: Record<string, string> = {};
+    
     if (!formData.title.trim()) {
-      toast.error("Judul artikel harus diisi");
-      setIsSubmitting(false);
-      return;
+      errors.title = "Judul artikel harus diisi";
     }
 
     if (!formData.category) {
-      toast.error("Kategori harus dipilih");
-      setIsSubmitting(false);
-      return;
+      errors.category = "Kategori harus dipilih";
     }
 
     if (!formData.content.trim()) {
-      toast.error("Konten artikel harus diisi");
+      errors.content = "Konten artikel harus diisi";
+    }
+
+    if (Object.keys(errors).length > 0) {
+      setFieldErrors(errors);
       setIsSubmitting(false);
       return;
     }
 
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1000));
+    try {
+      // Upload thumbnail if provided
+      let thumbnailUrl: string | undefined;
+      if (thumbnailFile) {
+        toast.loading("Mengunggah thumbnail...", { id: "upload-thumbnail" });
+        const result = await uploadFile(thumbnailFile);
+        thumbnailUrl = `${API_BASE_URL.replace('/api/v1', '')}${result.url}`;
+        toast.dismiss("upload-thumbnail");
+      }
 
-    // In production, this would call an API to create the article
-    console.log("Creating article:", {
-      ...formData,
-      readingTime: calculateReadingTime(formData.content),
-      status: saveAsDraft ? "draft" : "published",
-    });
+      await articlesService.createArticle({
+        title: formData.title,
+        excerpt: formData.excerpt || formData.content.slice(0, 150) + "...",
+        content: formData.content,
+        category: formData.category,
+        thumbnailUrl: thumbnailUrl,
+        status: saveAsDraft ? "draft" : "published",
+      });
 
-    if (saveAsDraft) {
-      toast.success("Artikel disimpan sebagai draft");
-    } else {
-      toast.success(
-        <div>
-          <p>Artikel berhasil dipublikasikan!</p>
-          <p className="text-green-400 text-sm">+{ACTION_POINTS.CREATE_ARTICLE} EXP</p>
-        </div>
-      );
+      if (saveAsDraft) {
+        toast.success("Artikel disimpan sebagai draft");
+      } else {
+        toast.success(
+          <div>
+            <p>Artikel berhasil dipublikasikan!</p>
+            <p className="text-green-400 text-sm">+{ACTION_POINTS.CREATE_ARTICLE} EXP</p>
+          </div>
+        );
+      }
+
+      router.push("/dashboard/articles");
+    } catch (error) {
+      console.error("Error creating article:", error);
+      
+      if (error instanceof ApiError) {
+        // Show specific error message from API
+        toast.error(error.message);
+        
+        // If there are field-specific errors, display them
+        if (error.errors) {
+          const newErrors: Record<string, string> = {};
+          Object.entries(error.errors).forEach(([field, message]) => {
+            newErrors[field] = message;
+          });
+          setFieldErrors(newErrors);
+        }
+      } else if (error instanceof Error) {
+        toast.error(error.message);
+      } else {
+        toast.error("Terjadi kesalahan. Silakan coba lagi.");
+      }
+    } finally {
+      setIsSubmitting(false);
     }
-
-    setIsSubmitting(false);
-    router.push("/dashboard/articles");
   };
+
+  if (authLoading || !user) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <LucideIcons.Loader2 className="w-8 h-8 text-blue-500 animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-4xl mx-auto space-y-8">
@@ -142,9 +217,12 @@ export default function NewArticlePage() {
                 value={formData.title}
                 onChange={handleChange}
                 placeholder="Masukkan judul artikel yang menarik"
-                className="mt-1.5 bg-zinc-800/50 border-zinc-700"
+                className={`mt-1.5 bg-zinc-800/50 border-zinc-700 ${fieldErrors.title ? 'border-red-500' : ''}`}
                 required
               />
+              {fieldErrors.title && (
+                <p className="text-sm text-red-500 mt-1">{fieldErrors.title}</p>
+              )}
             </div>
 
             <div>
@@ -171,7 +249,7 @@ export default function NewArticlePage() {
                   value={formData.category}
                   onChange={handleChange}
                   required
-                  className="w-full mt-1.5 h-10 px-3 bg-zinc-800/50 border border-zinc-700 rounded-lg text-zinc-100 focus:outline-none focus:ring-2 focus:ring-blue-500/40"
+                  className={`w-full mt-1.5 h-10 px-3 bg-zinc-800/50 border rounded-lg text-zinc-100 focus:outline-none focus:ring-2 focus:ring-blue-500/40 ${fieldErrors.category ? 'border-red-500' : 'border-zinc-700'}`}
                 >
                   <option value="">Pilih kategori</option>
                   {articleCategories.map((cat) => (
@@ -180,18 +258,49 @@ export default function NewArticlePage() {
                     </option>
                   ))}
                 </select>
+                {fieldErrors.category && (
+                  <p className="text-sm text-red-500 mt-1">{fieldErrors.category}</p>
+                )}
               </div>
 
               <div>
-                <Label htmlFor="thumbnailUrl">URL Thumbnail</Label>
-                <Input
-                  id="thumbnailUrl"
-                  name="thumbnailUrl"
-                  value={formData.thumbnailUrl}
-                  onChange={handleChange}
-                  placeholder="https://..."
-                  className="mt-1.5 bg-zinc-800/50 border-zinc-700"
-                />
+                <Label>Thumbnail</Label>
+                <div className="mt-1.5">
+                  {thumbnailPreview ? (
+                    <div className="relative w-full h-10 flex items-center gap-2 px-3 bg-zinc-800/50 border border-zinc-700 rounded-lg">
+                      <img
+                        src={thumbnailPreview}
+                        alt="Thumbnail"
+                        className="w-8 h-8 rounded object-cover"
+                      />
+                      <span className="text-sm text-zinc-300 truncate flex-1">
+                        {thumbnailFile?.name}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={removeThumbnail}
+                        className="p-1 hover:bg-zinc-700 rounded transition-colors"
+                      >
+                        <LucideIcons.X className="w-4 h-4 text-zinc-400" />
+                      </button>
+                    </div>
+                  ) : (
+                    <div
+                      onClick={() => thumbnailInputRef.current?.click()}
+                      className="w-full h-10 flex items-center gap-2 px-3 bg-zinc-800/50 border border-dashed border-zinc-700 rounded-lg cursor-pointer hover:border-blue-500 hover:bg-zinc-800 transition-colors"
+                    >
+                      <LucideIcons.Upload className="w-4 h-4 text-zinc-500" />
+                      <span className="text-sm text-zinc-500">Upload thumbnail</span>
+                    </div>
+                  )}
+                  <input
+                    ref={thumbnailInputRef}
+                    type="file"
+                    accept="image/*"
+                    onChange={handleThumbnailChange}
+                    className="hidden"
+                  />
+                </div>
               </div>
             </div>
           </div>
@@ -220,11 +329,20 @@ export default function NewArticlePage() {
               name="content"
               value={formData.content}
               onChange={handleChange}
-              placeholder="Tulis konten artikel Anda di sini...&#10;&#10;Tips:&#10;- Gunakan baris baru untuk paragraf baru&#10;- Mulai dengan heading utama (# Judul)&#10;- Gunakan ## untuk sub-heading&#10;- Format kode dengan ``` untuk code block"
+              placeholder="Tulis konten artikel Anda di sini...
+
+Tips:
+- Gunakan baris baru untuk paragraf baru
+- Mulai dengan heading utama (# Judul)
+- Gunakan ## untuk sub-heading
+- Format kode dengan ``` untuk code block"
               rows={16}
               required
-              className="w-full mt-1.5 px-3 py-2 bg-zinc-800/50 border border-zinc-700 rounded-lg text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-blue-500 resize-none font-mono text-sm"
+              className={`w-full mt-1.5 px-3 py-2 bg-zinc-800/50 border rounded-lg text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-blue-500 resize-none font-mono text-sm ${fieldErrors.content ? 'border-red-500' : 'border-zinc-700'}`}
             />
+            {fieldErrors.content && (
+              <p className="text-sm text-red-500 mt-1">{fieldErrors.content}</p>
+            )}
             <p className="text-xs text-zinc-500 mt-1">
               Mendukung format Markdown
             </p>
@@ -232,7 +350,7 @@ export default function NewArticlePage() {
         </div>
 
         {/* Preview Thumbnail */}
-        {formData.thumbnailUrl && (
+        {thumbnailPreview && (
           <div className="bg-zinc-900/50 rounded-xl border border-zinc-800 p-6 space-y-4">
             <h3 className="font-semibold text-zinc-100 flex items-center gap-2">
               <LucideIcons.Image className="w-5 h-5 text-zinc-400" />
@@ -240,12 +358,9 @@ export default function NewArticlePage() {
             </h3>
             <div className="relative aspect-video max-w-md rounded-lg overflow-hidden bg-zinc-800">
               <img
-                src={formData.thumbnailUrl}
+                src={thumbnailPreview}
                 alt="Preview"
                 className="w-full h-full object-cover"
-                onError={(e) => {
-                  e.currentTarget.src = "https://via.placeholder.com/800x400?text=Gambar+tidak+valid";
-                }}
               />
             </div>
           </div>

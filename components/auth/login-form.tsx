@@ -7,9 +7,14 @@ import * as z from "zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Eye, EyeOff, Github, Mail } from "lucide-react";
+import { Eye, EyeOff, Github, Mail, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/components/providers/AuthContext";
+import { ApiError } from "@/lib/api";
+
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/v1";
 
 const loginSchema = z.object({
   email: z.string().email("Email tidak valid"),
@@ -21,27 +26,44 @@ type LoginFormData = z.infer<typeof loginSchema>;
 export function LoginForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const router = useRouter();
+  const { login } = useAuth();
 
   const {
     register,
     handleSubmit,
     formState: { errors },
+    setError,
   } = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
   });
 
   const onSubmit = async (data: LoginFormData) => {
     setIsLoading(true);
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1500));
-    toast.success("Login berhasil! Selamat datang kembali.");
-    setIsLoading(false);
-    // TODO: Implement actual login logic
+    try {
+      await login(data);
+      toast.success("Login berhasil! Selamat datang kembali.");
+      router.push("/dashboard");
+    } catch (error) {
+      if (error instanceof ApiError) {
+        if (error.errors) {
+          Object.entries(error.errors).forEach(([field, message]) => {
+            setError(field as keyof LoginFormData, { message });
+          });
+        } else {
+          toast.error(error.message || "Login gagal");
+        }
+      } else {
+        toast.error("Terjadi kesalahan. Silakan coba lagi.");
+      }
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const handleSocialLogin = (provider: string) => {
-    toast.info(`Login dengan ${provider} akan segera tersedia`);
-    // TODO: Implement social login
+  const handleSocialLogin = (provider: "google" | "github") => {
+    // Redirect to OAuth endpoint
+    window.location.href = `${API_BASE_URL}/auth/${provider}`;
   };
 
   return (
@@ -107,7 +129,14 @@ export function LoginForm() {
           className="w-full bg-blue-600 hover:bg-blue-700 text-white"
           size="lg"
         >
-          {isLoading ? "Memproses..." : "Masuk"}
+          {isLoading ? (
+            <>
+              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              Memproses...
+            </>
+          ) : (
+            "Masuk"
+          )}
         </Button>
       </form>
 
@@ -117,7 +146,7 @@ export function LoginForm() {
           <div className="w-full border-t border-zinc-200 dark:border-zinc-800" />
         </div>
         <div className="relative flex justify-center text-sm">
-          <span className="px-2 bg-white dark:bg-zinc-950 text-zinc-500">
+          <span className="px-2 bg-white dark:bg-zinc-900 text-zinc-500">
             Atau lanjutkan dengan
           </span>
         </div>
@@ -128,7 +157,8 @@ export function LoginForm() {
         <Button
           type="button"
           variant="outline"
-          onClick={() => handleSocialLogin("Google")}
+          onClick={() => handleSocialLogin("google")}
+          disabled={isLoading}
         >
           <Mail className="w-4 h-4 mr-2" />
           Google
@@ -136,7 +166,8 @@ export function LoginForm() {
         <Button
           type="button"
           variant="outline"
-          onClick={() => handleSocialLogin("GitHub")}
+          onClick={() => handleSocialLogin("github")}
+          disabled={isLoading}
         >
           <Github className="w-4 h-4 mr-2" />
           GitHub

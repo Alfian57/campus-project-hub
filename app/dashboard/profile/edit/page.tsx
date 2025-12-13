@@ -1,32 +1,49 @@
 "use client";
 
-import { useState } from "react";
-import { getCurrentUser } from "@/lib/auth";
-import { redirect, useRouter } from "next/navigation";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/components/providers/AuthContext";
+import { usersService } from "@/lib/services/users";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import * as LucideIcons from "lucide-react";
+import { toast } from "sonner";
 
 export default function EditProfilePage() {
-  const user = getCurrentUser();
+  const { user, isLoading: authLoading, refreshUser } = useAuth();
   const router = useRouter();
 
-  if (!user) {
-    redirect("/login");
-  }
+  useEffect(() => {
+    if (!authLoading && !user) {
+      router.push("/login");
+    }
+  }, [user, authLoading, router]);
 
   const [formData, setFormData] = useState({
-    name: user.name,
-    university: user.university,
-    major: user.major,
-    bio: user.bio || "",
-    phone: user.phone || "",
+    name: "",
+    university: "",
+    major: "",
+    bio: "",
+    phone: "",
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
+
+  // Initialize form with user data
+  useEffect(() => {
+    if (user) {
+      setFormData({
+        name: user.name || "",
+        university: user.university || "",
+        major: user.major || "",
+        bio: user.bio || "",
+        phone: user.phone || "",
+      });
+    }
+  }, [user]);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -37,22 +54,36 @@ export default function EditProfilePage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!user) return;
+    
     setIsSubmitting(true);
 
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1000));
+    try {
+      await usersService.updateUser(user.id, formData);
+      await refreshUser();
+      
+      setSuccess(true);
+      toast.success("Profil berhasil diperbarui");
 
-    // In production, this would call an API to update the user
-    console.log("Updating profile:", formData);
-    
-    setIsSubmitting(false);
-    setSuccess(true);
-
-    // Redirect after success
-    setTimeout(() => {
-      router.push("/dashboard/profile");
-    }, 1500);
+      // Redirect after success
+      setTimeout(() => {
+        router.push("/dashboard/profile");
+      }, 1500);
+    } catch (error) {
+      console.error("Error updating profile:", error);
+      toast.error("Gagal memperbarui profil");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
+
+  if (authLoading || !user) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <LucideIcons.Loader2 className="w-8 h-8 text-blue-500 animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-2xl mx-auto space-y-8">
@@ -87,7 +118,7 @@ export default function EditProfilePage() {
         <div className="bg-zinc-900/50 rounded-xl border border-zinc-800 p-6">
           <div className="flex items-center gap-6">
             <img
-              src={user.avatarUrl}
+              src={user.avatarUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.name}`}
               alt={user.name}
               className="w-20 h-20 rounded-xl bg-zinc-800 border-2 border-zinc-700"
             />

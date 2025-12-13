@@ -1,25 +1,52 @@
-import { getCurrentUser } from "@/lib/auth";
-import { mockUsers } from "@/lib/mock-dashboard-data";
-import { redirect } from "next/navigation";
+"use client";
+
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/components/providers/AuthContext";
+import { usersService } from "@/lib/services/users";
 import { LeaderboardCard } from "@/components/dashboard/leaderboard-card";
 import { LevelBadge } from "@/components/dashboard/level-badge";
 import { ExpProgress } from "@/components/dashboard/exp-progress";
 import * as LucideIcons from "lucide-react";
+import { LeaderboardEntry } from "@/types/api";
 
 export default function LeaderboardPage() {
-  const currentUser = getCurrentUser();
+  const { user, isLoading: authLoading } = useAuth();
+  const router = useRouter();
+  const [rankedUsers, setRankedUsers] = useState<LeaderboardEntry[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  if (!currentUser) {
-    redirect("/login");
+  useEffect(() => {
+    if (!authLoading && !user) {
+      router.push("/login");
+    }
+  }, [user, authLoading, router]);
+
+  useEffect(() => {
+    async function fetchLeaderboard() {
+      try {
+        const data = await usersService.getLeaderboard(50);
+        setRankedUsers(data);
+      } catch (error) {
+        console.error("Error fetching leaderboard:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+
+    fetchLeaderboard();
+  }, []);
+
+  if (authLoading || !user) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <LucideIcons.Loader2 className="w-8 h-8 text-blue-500 animate-spin" />
+      </div>
+    );
   }
 
-  // Sort users by totalExp (descending)
-  const rankedUsers = [...mockUsers]
-    .filter((u) => u.status === "active")
-    .sort((a, b) => b.totalExp - a.totalExp);
-
   // Find current user's rank
-  const currentUserRank = rankedUsers.findIndex((u) => u.id === currentUser.id) + 1;
+  const currentUserRank = rankedUsers.findIndex((u) => u.user.id === user.id) + 1;
 
   // Top 3 users for podium
   const topThree = rankedUsers.slice(0, 3);
@@ -43,11 +70,11 @@ export default function LeaderboardPage() {
           {/* Rank Badge */}
           <div className="flex items-center gap-4">
             <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center text-3xl font-bold text-white shadow-lg shadow-blue-500/30">
-              #{currentUserRank}
+              #{currentUserRank || "-"}
             </div>
             <div>
               <p className="text-sm text-zinc-400">Peringkat Anda</p>
-              <p className="text-xl font-bold text-zinc-100">{currentUser.name}</p>
+              <p className="text-xl font-bold text-zinc-100">{user.name}</p>
             </div>
           </div>
 
@@ -57,65 +84,71 @@ export default function LeaderboardPage() {
           {/* Stats */}
           <div className="flex-1 space-y-3">
             <div className="flex items-center gap-3">
-              <LevelBadge totalExp={currentUser.totalExp} />
+              <LevelBadge totalExp={user.totalExp || 0} />
               <span className="text-zinc-400 text-sm">
-                {currentUser.totalExp.toLocaleString()} EXP
+                {(user.totalExp || 0).toLocaleString()} EXP
               </span>
             </div>
-            <ExpProgress totalExp={currentUser.totalExp} showDetails={false} />
+            <ExpProgress totalExp={user.totalExp || 0} showDetails={false} />
           </div>
         </div>
       </div>
 
       {/* Top 3 Podium */}
-      <div className="grid grid-cols-3 gap-4">
-        {[1, 0, 2].map((index) => {
-          const user = topThree[index];
-          if (!user) return null;
+      {isLoading ? (
+        <div className="flex items-center justify-center py-12">
+          <LucideIcons.Loader2 className="w-8 h-8 text-blue-500 animate-spin" />
+        </div>
+      ) : topThree.length > 0 ? (
+        <div className="grid grid-cols-3 gap-4">
+          {[1, 0, 2].map((index) => {
+            const entry = topThree[index];
+            if (!entry) return <div key={index} />;
 
-          const actualRank = index === 1 ? 1 : index === 0 ? 2 : 3;
-          const heights = { 1: "h-36", 2: "h-28", 3: "h-24" };
-          const colors = {
-            1: "from-yellow-400 to-amber-500",
-            2: "from-zinc-300 to-zinc-400",
-            3: "from-orange-400 to-orange-600",
-          };
+            const actualRank = index === 1 ? 1 : index === 0 ? 2 : 3;
+            const heights = { 1: "h-36", 2: "h-28", 3: "h-24" };
+            const colors = {
+              1: "from-yellow-400 to-amber-500",
+              2: "from-zinc-300 to-zinc-400",
+              3: "from-orange-400 to-orange-600",
+            };
 
-          return (
-            <div
-              key={user.id}
-              className="flex flex-col items-center"
-            >
-              {/* Avatar */}
-              <div className="relative mb-4">
-                <img
-                  src={user.avatarUrl}
-                  alt={user.name}
-                  className="w-16 h-16 rounded-full bg-zinc-800 border-4 border-zinc-700"
-                />
-                <div
-                  className={`absolute -bottom-2 -right-2 w-8 h-8 rounded-full bg-gradient-to-br ${colors[actualRank as keyof typeof colors]} flex items-center justify-center text-white font-bold text-sm shadow-lg`}
-                >
-                  {actualRank}
-                </div>
-              </div>
-
-              {/* Name */}
-              <p className="text-sm font-semibold text-zinc-100 text-center truncate max-w-full px-2">
-                {user.name}
-              </p>
-              <p className="text-xs text-zinc-500 mb-2">
-                {user.totalExp.toLocaleString()} EXP
-              </p>
-
-              {/* Podium */}
+            return (
               <div
-                className={`w-full ${heights[actualRank as keyof typeof heights]} rounded-t-xl bg-gradient-to-t ${colors[actualRank as keyof typeof colors]} opacity-80`}
-              />
-            </div>
-          );
-        })}
-      </div>
+                key={entry.user.id}
+                className="flex flex-col items-center"
+              >
+                {/* Avatar */}
+                <div className="relative mb-4">
+                  <img
+                    src={entry.user.avatarUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${entry.user.name}`}
+                    alt={entry.user.name}
+                    className="w-16 h-16 rounded-full bg-zinc-800 border-4 border-zinc-700"
+                  />
+                  <div
+                    className={`absolute -bottom-2 -right-2 w-8 h-8 rounded-full bg-gradient-to-br ${colors[actualRank as keyof typeof colors]} flex items-center justify-center text-white font-bold text-sm shadow-lg`}
+                  >
+                    {actualRank}
+                  </div>
+                </div>
+
+                {/* Name */}
+                <p className="text-sm font-semibold text-zinc-100 text-center truncate max-w-full px-2">
+                  {entry.user.name}
+                </p>
+                <p className="text-xs text-zinc-500 mb-2">
+                  {entry.totalExp.toLocaleString()} EXP
+                </p>
+
+                {/* Podium */}
+                <div
+                  className={`w-full ${heights[actualRank as keyof typeof heights]} rounded-t-xl bg-gradient-to-t ${colors[actualRank as keyof typeof colors]} opacity-80`}
+                />
+              </div>
+            );
+          })}
+        </div>
+      ) : null}
 
       {/* Full Ranking List */}
       <div className="space-y-3">
@@ -124,16 +157,30 @@ export default function LeaderboardPage() {
           Peringkat Lengkap
         </h2>
 
-        <div className="space-y-2">
-          {rankedUsers.map((user, index) => (
-            <LeaderboardCard
-              key={user.id}
-              user={user}
-              rank={index + 1}
-              isCurrentUser={user.id === currentUser.id}
-            />
-          ))}
-        </div>
+        {isLoading ? (
+          <div className="text-center py-8 text-zinc-500">Memuat...</div>
+        ) : rankedUsers.length > 0 ? (
+          <div className="space-y-2">
+            {rankedUsers.map((entry, index) => (
+              <LeaderboardCard
+                key={entry.user.id}
+                user={{
+                  id: entry.user.id,
+                  name: entry.user.name,
+                  avatarUrl: entry.user.avatarUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${entry.user.name}`,
+                  university: entry.user.university || "",
+                  totalExp: entry.totalExp,
+                }}
+                rank={index + 1}
+                isCurrentUser={entry.user.id === user.id}
+              />
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-8 text-zinc-500">
+            Belum ada data leaderboard
+          </div>
+        )}
       </div>
 
       {/* How to Earn EXP */}

@@ -33,6 +33,7 @@ export function ImageCarousel({ images, alt }: ImageCarouselProps) {
           fill
           className="object-cover"
           priority
+          unoptimized
         />
       </div>
     );
@@ -60,6 +61,7 @@ export function ImageCarousel({ images, alt }: ImageCarouselProps) {
           fill
           className="object-cover transition-opacity duration-300"
           priority
+          unoptimized
         />
 
         {/* Navigation Arrows */}
@@ -123,6 +125,7 @@ export function ImageCarousel({ images, alt }: ImageCarouselProps) {
                 alt={`${alt} thumbnail ${index + 1}`}
                 fill
                 className="object-cover"
+                unoptimized
               />
             </button>
           ))}

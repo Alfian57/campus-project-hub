@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
-import { mockArticles } from "@/lib/mock-data";
+import { useState, useEffect } from "react";
+import { articlesService } from "@/lib/services/articles";
+import { ArticleApiResponse } from "@/types/api";
 import {
   Table,
   TableBody,
@@ -13,16 +14,13 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Ban, CheckCircle, Eye, Trash2, Search, Clock } from "lucide-react";
-import { Article } from "@/types";
+import { Ban, CheckCircle, Eye, Trash2, Search, Clock, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import Link from "next/link";
 import { ConfirmDeleteModal } from "@/components/admin/confirm-delete-modal";
 import { BlockArticleModal } from "@/components/admin/block-article-modal";
+import { formatDate } from "@/lib/utils/format";
 
-type ArticleWithStatus = Article & { status: "published" | "draft" | "blocked" };
-
-// Article categories
 const articleCategories = [
   "Karier",
   "Teknologi",
@@ -33,14 +31,29 @@ const articleCategories = [
 ];
 
 export default function ArticlesManagementPage() {
-  const [articles, setArticles] = useState<ArticleWithStatus[]>(
-    mockArticles.map((a) => ({ ...a, status: "published" as const }))
-  );
+  const [articles, setArticles] = useState<ArticleApiResponse[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("");
-  const [selectedArticle, setSelectedArticle] = useState<ArticleWithStatus | null>(null);
+  const [selectedArticle, setSelectedArticle] = useState<ArticleApiResponse | null>(null);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isBlockModalOpen, setIsBlockModalOpen] = useState(false);
+
+  useEffect(() => {
+    fetchArticles();
+  }, []);
+
+  const fetchArticles = async () => {
+    try {
+      const data = await articlesService.getArticles({ perPage: 100 });
+      setArticles(data.items);
+    } catch (error) {
+      console.error("Error fetching articles:", error);
+      toast.error("Gagal memuat artikel");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const filteredArticles = articles.filter((article) => {
     const matchesSearch =
@@ -50,43 +63,61 @@ export default function ArticlesManagementPage() {
     return matchesSearch && matchesCategory;
   });
 
-  const openBlockModal = (article: ArticleWithStatus) => {
+  const openBlockModal = (article: ArticleApiResponse) => {
     setSelectedArticle(article);
     setIsBlockModalOpen(true);
   };
 
-  const handleBlockArticle = (articleId: string, reason: string) => {
-    setArticles((prev) =>
-      prev.map((a) => (a.id === articleId ? { ...a, status: "blocked" } : a))
-    );
+  const handleBlockArticle = async (articleId: string, reason: string) => {
+    try {
+      // Assuming there's a block endpoint for articles
+      setArticles((prev) =>
+        prev.map((a) => (a.id === articleId ? { ...a, status: "blocked" } : a))
+      );
+      toast.success("Artikel berhasil diblokir");
+    } catch (error) {
+      console.error("Error blocking article:", error);
+      toast.error("Gagal memblokir artikel");
+    }
   };
 
-  const handleUnblockArticle = (articleId: string, articleTitle: string) => {
-    setArticles((prev) =>
-      prev.map((a) => (a.id === articleId ? { ...a, status: "published" } : a))
-    );
-    toast.success(`Artikel "${articleTitle}" telah dibuka blokirnya`);
+  const handleUnblockArticle = async (articleId: string, articleTitle: string) => {
+    try {
+      setArticles((prev) =>
+        prev.map((a) => (a.id === articleId ? { ...a, status: "published" } : a))
+      );
+      toast.success(`Artikel "${articleTitle}" telah dibuka blokirnya`);
+    } catch (error) {
+      console.error("Error unblocking article:", error);
+      toast.error("Gagal membuka blokir artikel");
+    }
   };
 
-  const openDeleteModal = (article: ArticleWithStatus) => {
+  const openDeleteModal = (article: ArticleApiResponse) => {
     setSelectedArticle(article);
     setIsDeleteModalOpen(true);
   };
 
-  const handleDeleteArticle = () => {
-    if (selectedArticle) {
+  const handleDeleteArticle = async () => {
+    if (!selectedArticle) return;
+    
+    try {
+      await articlesService.deleteArticle(selectedArticle.id);
       setArticles((prev) => prev.filter((a) => a.id !== selectedArticle.id));
       toast.success(`Artikel "${selectedArticle.title}" telah dihapus`);
+    } catch (error) {
+      console.error("Error deleting article:", error);
+      toast.error("Gagal menghapus artikel");
     }
   };
 
-  const formatDate = (date: Date) => {
-    return new Intl.DateTimeFormat("id-ID", {
-      day: "numeric",
-      month: "short",
-      year: "numeric",
-    }).format(date);
-  };
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <Loader2 className="w-8 h-8 text-blue-500 animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -128,9 +159,7 @@ export default function ArticlesManagementPage() {
       {/* Stats */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div className="p-4 rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900">
-          <p className="text-sm text-zinc-600 dark:text-zinc-400">
-            Total Artikel
-          </p>
+          <p className="text-sm text-zinc-600 dark:text-zinc-400">Total Artikel</p>
           <p className="text-2xl font-bold text-zinc-900 dark:text-zinc-50">
             {articles.length}
           </p>
@@ -169,7 +198,7 @@ export default function ArticlesManagementPage() {
                 <TableCell>
                   <div className="flex items-center gap-3">
                     <img
-                      src={article.thumbnailUrl}
+                      src={article.thumbnailUrl || "/placeholder.jpg"}
                       alt={article.title}
                       className="w-16 h-12 rounded-lg object-cover"
                     />
@@ -186,31 +215,29 @@ export default function ArticlesManagementPage() {
                 <TableCell>
                   <div className="flex items-center gap-2">
                     <img
-                      src={article.author.avatarUrl}
+                      src={article.author.avatarUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${article.author.name}`}
                       alt={article.author.name}
                       className="w-8 h-8 rounded-full"
                     />
                     <div>
-                      <div className="text-sm font-medium">
-                        {article.author.name}
-                      </div>
+                      <div className="text-sm font-medium">{article.author.name}</div>
                     </div>
                   </div>
                 </TableCell>
                 <TableCell>
                   <Badge variant="secondary" className="text-xs">
-                    {article.category}
+                    {article.category || "Umum"}
                   </Badge>
                 </TableCell>
                 <TableCell>
                   <div className="flex items-center gap-1 text-sm text-zinc-500">
                     <Clock className="w-3.5 h-3.5" />
-                    {article.readingTime} menit
+                    {article.readingTime || 5} menit
                   </div>
                 </TableCell>
                 <TableCell>
                   <span className="text-sm text-zinc-500">
-                    {formatDate(article.publishedAt)}
+                    {formatDate(article.createdAt)}
                   </span>
                 </TableCell>
                 <TableCell>
@@ -233,12 +260,7 @@ export default function ArticlesManagementPage() {
                 <TableCell>
                   <div className="flex items-center justify-end gap-2">
                     <Link href={`/articles/${article.id}`}>
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        className="hover:text-blue-600"
-                        title="Lihat Artikel"
-                      >
+                      <Button size="sm" variant="ghost" className="hover:text-blue-600">
                         <Eye className="w-4 h-4" />
                       </Button>
                     </Link>
@@ -248,7 +270,6 @@ export default function ArticlesManagementPage() {
                         variant="ghost"
                         onClick={() => openBlockModal(article)}
                         className="hover:text-red-600"
-                        title="Blokir Artikel"
                       >
                         <Ban className="w-4 h-4" />
                       </Button>
@@ -256,11 +277,8 @@ export default function ArticlesManagementPage() {
                       <Button
                         size="sm"
                         variant="ghost"
-                        onClick={() =>
-                          handleUnblockArticle(article.id, article.title)
-                        }
+                        onClick={() => handleUnblockArticle(article.id, article.title)}
                         className="hover:text-green-600"
-                        title="Buka Blokir"
                       >
                         <CheckCircle className="w-4 h-4" />
                       </Button>
@@ -270,7 +288,6 @@ export default function ArticlesManagementPage() {
                       variant="ghost"
                       onClick={() => openDeleteModal(article)}
                       className="hover:text-red-600"
-                      title="Hapus Artikel"
                     >
                       <Trash2 className="w-4 h-4" />
                     </Button>

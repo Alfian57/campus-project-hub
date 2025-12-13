@@ -1,11 +1,13 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { cn } from "@/lib/cn";
 import * as LucideIcons from "lucide-react";
-import { getCurrentUser } from "@/lib/auth";
-import { motion } from "framer-motion";
+import { useAuth } from "@/components/providers/AuthContext";
+import { motion, AnimatePresence } from "framer-motion";
+import { ConfirmLogoutModal } from "@/components/dashboard/confirm-logout-modal";
 
 interface SidebarProps {
   role?: "user" | "admin" | "moderator";
@@ -19,88 +21,66 @@ interface NavLink {
 
 export function Sidebar({ role = "user" }: SidebarProps) {
   const pathname = usePathname();
-  const user = getCurrentUser();
+  const router = useRouter();
+  const { user, logout } = useAuth();
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
 
   // =========================================
   // MENU MAHASISWA (User/Student Dashboard)
-  // Halaman-halaman yang dapat diakses oleh mahasiswa
   // =========================================
   const userLinks: NavLink[] = [
-    // Menu Mahasiswa: Halaman ringkasan/overview dashboard
     {
       href: "/dashboard",
       label: "Ringkasan",
       iconName: "LayoutDashboard",
     },
-    // Menu Mahasiswa: Halaman profil pengguna
-    {
-      href: "/dashboard/profile",
-      label: "Profil Saya",
-      iconName: "User",
-    },
-    // Menu Mahasiswa: Halaman untuk melihat dan mengelola proyek milik mahasiswa
     {
       href: "/dashboard/projects",
       label: "Proyek Saya",
       iconName: "FolderKanban",
     },
-    // Menu Mahasiswa: Halaman untuk melihat dan mengelola artikel milik mahasiswa
     {
       href: "/dashboard/articles",
       label: "Artikel Saya",
       iconName: "FileText",
     },
-    // Menu Mahasiswa: Halaman leaderboard
     {
       href: "/dashboard/leaderboard",
       label: "Leaderboard",
       iconName: "Trophy",
     },
-    // Menu Mahasiswa: Halaman pengaturan akun dan preferensi
-    {
-      href: "/dashboard/settings",
-      label: "Pengaturan",
-      iconName: "Settings",
-    },
   ];
 
   // =========================================
   // MENU ADMIN (Admin Dashboard)
-  // Halaman-halaman yang hanya dapat diakses oleh admin
-  // Semua route admin berada di bawah /dashboard/admin/*
   // =========================================
   const adminLinks: NavLink[] = [
-    // Menu Admin: Halaman ringkasan/overview dashboard admin
     {
       href: "/dashboard/admin",
       label: "Dashboard Admin",
       iconName: "LayoutDashboard",
     },
-    // Menu Admin: Halaman untuk mengelola pengguna (mahasiswa, dosen, dll)
     {
       href: "/dashboard/admin/users",
       label: "Pengguna",
       iconName: "Users",
     },
-    // Menu Admin: Halaman untuk mengelola semua proyek yang ada
     {
       href: "/dashboard/admin/projects",
       label: "Proyek",
       iconName: "FolderKanban",
     },
-    // Menu Admin: Halaman untuk mengelola kategori proyek
     {
       href: "/dashboard/admin/categories",
       label: "Kategori",
       iconName: "Tags",
     },
-    // Menu Admin: Halaman untuk mengelola artikel
     {
       href: "/dashboard/admin/articles",
       label: "Artikel",
       iconName: "FileText",
     },
-    // Menu Admin: Halaman untuk melihat dan mengelola transaksi pembelian
     {
       href: "/dashboard/admin/transactions",
       label: "Transaksi",
@@ -110,23 +90,18 @@ export function Sidebar({ role = "user" }: SidebarProps) {
 
   // =========================================
   // MENU MODERATOR (Moderator Dashboard)
-  // Halaman-halaman yang dapat diakses oleh moderator
-  // Semua route moderator berada di bawah /dashboard/moderator/*
   // =========================================
   const moderatorLinks: NavLink[] = [
-    // Menu Moderator: Halaman ringkasan/overview dashboard moderator
     {
       href: "/dashboard/moderator",
       label: "Dashboard Moderator",
       iconName: "LayoutDashboard",
     },
-    // Menu Moderator: Halaman antrian proyek yang perlu di-review
     {
       href: "/dashboard/moderator/queue",
       label: "Antrian Review",
       iconName: "Flag",
     },
-    // Menu Moderator: Halaman untuk melihat semua proyek
     {
       href: "/dashboard/moderator/projects",
       label: "Proyek",
@@ -142,12 +117,16 @@ export function Sidebar({ role = "user" }: SidebarProps) {
       : userLinks;
 
   const LogoIcon = LucideIcons.Sparkles;
-  const LogOutIcon = LucideIcons.LogOut;
 
   const rolePanelLabel = {
     user: "Panel Pengguna",
     admin: "Panel Admin",
     moderator: "Panel Moderator",
+  };
+
+  const handleLogout = async () => {
+    await logout();
+    router.push("/");
   };
 
   return (
@@ -242,28 +221,62 @@ export function Sidebar({ role = "user" }: SidebarProps) {
         animate={{ opacity: 1, y: 0 }}
         className="p-4 rounded-2xl bg-white dark:bg-zinc-900 shadow-sm border border-zinc-200 dark:border-zinc-800"
       >
-        <Link href="/dashboard/profile">
-          <div className="flex items-center gap-3 mb-3 pb-3 border-b border-zinc-100 dark:border-zinc-800 cursor-pointer hover:bg-zinc-50 dark:hover:bg-zinc-800/50 -mx-2 px-2 py-1 rounded-lg transition-colors">
-            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center text-white font-semibold text-sm">
-              {user?.name?.charAt(0) || "U"}
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-50 truncate">
-                {user?.name}
-              </p>
-              <p className="text-xs text-zinc-500 truncate">{user?.email}</p>
-            </div>
-            <LucideIcons.ChevronRight className="w-4 h-4 text-zinc-400" />
+        {/* User Info - Clickable to toggle menu */}
+        <button
+          onClick={() => setIsMenuOpen(!isMenuOpen)}
+          className="w-full flex items-center gap-3 hover:bg-zinc-50 dark:hover:bg-zinc-800/50 -mx-2 px-2 py-1 rounded-lg transition-colors"
+        >
+          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center text-white font-semibold text-sm">
+            {user?.name?.charAt(0) || "U"}
           </div>
-        </Link>
+          <div className="flex-1 min-w-0 text-left">
+            <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-50 truncate">
+              {user?.name}
+            </p>
+            <p className="text-xs text-zinc-500 truncate">{user?.email}</p>
+          </div>
+          <LucideIcons.ChevronUp className={cn(
+            "w-4 h-4 text-zinc-400 transition-transform duration-200",
+            isMenuOpen ? "rotate-180" : ""
+          )} />
+        </button>
         
-        <Link href="/">
-          <button className="w-full flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 text-sm font-medium transition-colors group">
-            <LogOutIcon className="w-4 h-4 group-hover:-translate-x-0.5 transition-transform" />
-            <span>Kembali ke Beranda</span>
-          </button>
-        </Link>
+        {/* Quick Menu - Toggleable */}
+        <AnimatePresence>
+          {isMenuOpen && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: "auto", opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className="overflow-hidden"
+            >
+              <div className="pt-3 mt-3 border-t border-zinc-100 dark:border-zinc-800 space-y-1">
+                <Link href="/dashboard/profile">
+                  <button className="w-full flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300 text-sm transition-colors">
+                    <LucideIcons.User className="w-4 h-4" />
+                    <span>Profil Saya</span>
+                  </button>
+                </Link>
+                <button 
+                  onClick={() => setIsLogoutModalOpen(true)}
+                  className="w-full flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 text-red-600 dark:text-red-400 text-sm transition-colors"
+                >
+                  <LucideIcons.LogOut className="w-4 h-4" />
+                  <span>Keluar</span>
+                </button>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </motion.div>
+
+      {/* Logout Confirmation Modal */}
+      <ConfirmLogoutModal
+        isOpen={isLogoutModalOpen}
+        onClose={() => setIsLogoutModalOpen(false)}
+        onConfirm={handleLogout}
+      />
     </div>
   );
 }

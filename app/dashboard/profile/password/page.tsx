@@ -1,22 +1,25 @@
 "use client";
 
-import { useState } from "react";
-import { getCurrentUser } from "@/lib/auth";
-import { redirect, useRouter } from "next/navigation";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/components/providers/AuthContext";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import * as LucideIcons from "lucide-react";
 import { cn } from "@/lib/cn";
+import { toast } from "sonner";
 
 export default function ChangePasswordPage() {
-  const user = getCurrentUser();
+  const { user, isLoading: authLoading } = useAuth();
   const router = useRouter();
 
-  if (!user) {
-    redirect("/login");
-  }
+  useEffect(() => {
+    if (!authLoading && !user) {
+      router.push("/login");
+    }
+  }, [user, authLoading, router]);
 
   const [formData, setFormData] = useState({
     currentPassword: "",
@@ -87,20 +90,32 @@ export default function ChangePasswordPage() {
 
     setIsSubmitting(true);
 
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1000));
+    try {
+      // TODO: Call API to change password when endpoint is available
+      await new Promise((resolve) => setTimeout(resolve, 1000));
 
-    // In production, this would call an API to update the password
-    console.log("Updating password");
+      setSuccess(true);
+      toast.success("Password berhasil diperbarui");
 
-    setIsSubmitting(false);
-    setSuccess(true);
-
-    // Redirect after success
-    setTimeout(() => {
-      router.push("/dashboard/profile");
-    }, 1500);
+      // Redirect after success
+      setTimeout(() => {
+        router.push("/dashboard/profile");
+      }, 1500);
+    } catch (error) {
+      console.error("Error changing password:", error);
+      toast.error("Gagal mengubah password");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
+
+  if (authLoading || !user) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <LucideIcons.Loader2 className="w-8 h-8 text-blue-500 animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-xl mx-auto space-y-8">

@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
-import { mockCategories } from "@/lib/mock-dashboard-data";
+import { useState, useEffect } from "react";
+import { categoriesService } from "@/lib/services/categories";
+import { CategoryApiResponse } from "@/types/api";
 import {
   Table,
   TableBody,
@@ -13,8 +14,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Edit, Trash2, Plus } from "lucide-react";
-import { Category } from "@/types/dashboard";
+import { Edit, Trash2, Plus, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import {
   Dialog,
@@ -26,12 +26,14 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { ConfirmDeleteModal } from "@/components/admin/confirm-delete-modal";
+import { formatDate } from "@/lib/utils/format";
 
 export default function CategoriesManagementPage() {
-  const [categories, setCategories] = useState<Category[]>(mockCategories);
+  const [categories, setCategories] = useState<CategoryApiResponse[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-  const [editingCategory, setEditingCategory] = useState<Category | null>(null);
-  const [categoryToDelete, setCategoryToDelete] = useState<Category | null>(null);
+  const [editingCategory, setEditingCategory] = useState<CategoryApiResponse | null>(null);
+  const [categoryToDelete, setCategoryToDelete] = useState<CategoryApiResponse | null>(null);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
@@ -39,68 +41,89 @@ export default function CategoriesManagementPage() {
     color: "blue",
   });
 
-  const handleCreate = () => {
+  useEffect(() => {
+    fetchCategories();
+  }, []);
+
+  const fetchCategories = async () => {
+    try {
+      const data = await categoriesService.getCategories();
+      setCategories(data);
+    } catch (error) {
+      console.error("Error fetching categories:", error);
+      toast.error("Gagal memuat kategori");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleCreate = async () => {
     if (!formData.name.trim()) {
       toast.error("Nama kategori wajib diisi");
       return;
     }
 
-    const newCategory: Category = {
-      id: String(categories.length + 1),
-      name: formData.name,
-      slug: formData.name.toLowerCase().replace(/\s+/g, "-"),
-      description: formData.description,
-      color: formData.color,
-      projectCount: 0,
-      createdAt: new Date(),
-    };
-
-    setCategories((prev) => [...prev, newCategory]);
-    toast.success(`Kategori "${formData.name}" berhasil dibuat`);
-    setFormData({ name: "", description: "", color: "blue" });
-    setIsCreateModalOpen(false);
+    try {
+      const newCategory = await categoriesService.createCategory({
+        name: formData.name,
+        description: formData.description,
+        color: formData.color,
+      });
+      setCategories((prev) => [...prev, newCategory]);
+      toast.success(`Kategori "${formData.name}" berhasil dibuat`);
+      setFormData({ name: "", description: "", color: "blue" });
+      setIsCreateModalOpen(false);
+    } catch (error) {
+      console.error("Error creating category:", error);
+      toast.error("Gagal membuat kategori");
+    }
   };
 
-  const handleUpdate = () => {
+  const handleUpdate = async () => {
     if (!editingCategory || !formData.name.trim()) return;
 
-    setCategories((prev) =>
-      prev.map((cat) =>
-        cat.id === editingCategory.id
-          ? {
-              ...cat,
-              name: formData.name,
-              description: formData.description,
-              color: formData.color,
-              slug: formData.name.toLowerCase().replace(/\s+/g, "-"),
-            }
-          : cat
-      )
-    );
-
-    toast.success(`Kategori "${formData.name}" berhasil diperbarui`);
-    setEditingCategory(null);
-    setFormData({ name: "", description: "", color: "blue" });
+    try {
+      const updated = await categoriesService.updateCategory(editingCategory.id, {
+        name: formData.name,
+        description: formData.description,
+        color: formData.color,
+      });
+      setCategories((prev) =>
+        prev.map((cat) => (cat.id === editingCategory.id ? updated : cat))
+      );
+      toast.success(`Kategori "${formData.name}" berhasil diperbarui`);
+      setEditingCategory(null);
+      setFormData({ name: "", description: "", color: "blue" });
+    } catch (error) {
+      console.error("Error updating category:", error);
+      toast.error("Gagal memperbarui kategori");
+    }
   };
 
-  const openDeleteModal = (category: Category) => {
+  const openDeleteModal = (category: CategoryApiResponse) => {
     setCategoryToDelete(category);
     setIsDeleteModalOpen(true);
   };
 
-  const handleDelete = () => {
-    if (categoryToDelete) {
+  const handleDelete = async () => {
+    if (!categoryToDelete) return;
+    
+    try {
+      await categoriesService.deleteCategory(categoryToDelete.id);
       setCategories((prev) => prev.filter((cat) => cat.id !== categoryToDelete.id));
       toast.success(`Kategori "${categoryToDelete.name}" berhasil dihapus`);
+    } catch (error) {
+      console.error("Error deleting category:", error);
+      toast.error("Gagal menghapus kategori");
     }
   };
 
-  const openEditModal = (category: Category) => {
+  const openEditModal = (category: CategoryApiResponse) => {
     setEditingCategory(category);
     setFormData({
       name: category.name,
-      description: category.description,
-      color: category.color,
+      description: category.description || "",
+      color: category.color || "blue",
     });
   };
 
@@ -112,6 +135,14 @@ export default function CategoriesManagementPage() {
     { value: "purple", label: "Ungu", class: "bg-purple-500" },
     { value: "pink", label: "Pink", class: "bg-pink-500" },
   ];
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <Loader2 className="w-8 h-8 text-blue-500 animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -135,32 +166,17 @@ export default function CategoriesManagementPage() {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="p-4 rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900">
-          <p className="text-sm text-zinc-600 dark:text-zinc-400">
-            Total Kategori
-          </p>
+          <p className="text-sm text-zinc-600 dark:text-zinc-400">Total Kategori</p>
           <p className="text-2xl font-bold text-zinc-900 dark:text-zinc-50">
             {categories.length}
           </p>
         </div>
         <div className="p-4 rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900">
-          <p className="text-sm text-zinc-600 dark:text-zinc-400">
-            Total Proyek
-          </p>
+          <p className="text-sm text-zinc-600 dark:text-zinc-400">Total Proyek</p>
           <p className="text-2xl font-bold text-blue-600">
-            {categories.reduce((sum, cat) => sum + cat.projectCount, 0)}
-          </p>
-        </div>
-        <div className="p-4 rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900">
-          <p className="text-sm text-zinc-600 dark:text-zinc-400">
-            Rata-rata Proyek/Kategori
-          </p>
-          <p className="text-2xl font-bold text-purple-600">
-            {(
-              categories.reduce((sum, cat) => sum + cat.projectCount, 0) /
-              categories.length
-            ).toFixed(1)}
+            {categories.reduce((sum, cat) => sum + (cat.projectCount || 0), 0)}
           </p>
         </div>
       </div>
@@ -172,7 +188,6 @@ export default function CategoriesManagementPage() {
             <TableRow>
               <TableHead>Warna</TableHead>
               <TableHead>Nama</TableHead>
-              <TableHead>Slug</TableHead>
               <TableHead>Deskripsi</TableHead>
               <TableHead>Proyek</TableHead>
               <TableHead>Dibuat</TableHead>
@@ -183,9 +198,7 @@ export default function CategoriesManagementPage() {
             {categories.map((category) => (
               <TableRow key={category.id}>
                 <TableCell>
-                  <div
-                    className={`w-8 h-8 rounded-full bg-${category.color}-500`}
-                  />
+                  <div className={`w-8 h-8 rounded-full bg-${category.color || "blue"}-500`} />
                 </TableCell>
                 <TableCell>
                   <div className="font-medium text-zinc-900 dark:text-zinc-50">
@@ -193,20 +206,15 @@ export default function CategoriesManagementPage() {
                   </div>
                 </TableCell>
                 <TableCell>
-                  <code className="text-sm text-zinc-600 dark:text-zinc-400">
-                    {category.slug}
-                  </code>
-                </TableCell>
-                <TableCell>
                   <div className="text-sm text-zinc-600 dark:text-zinc-400 max-w-xs truncate">
-                    {category.description}
+                    {category.description || "-"}
                   </div>
                 </TableCell>
                 <TableCell>
-                  <Badge variant="secondary">{category.projectCount}</Badge>
+                  <Badge variant="secondary">{category.projectCount || 0}</Badge>
                 </TableCell>
                 <TableCell className="text-sm text-zinc-600 dark:text-zinc-400">
-                  {category.createdAt.toLocaleDateString("id-ID")}
+                  {formatDate(category.createdAt)}
                 </TableCell>
                 <TableCell>
                   <div className="flex items-center justify-end gap-2">
@@ -215,7 +223,6 @@ export default function CategoriesManagementPage() {
                       variant="ghost"
                       onClick={() => openEditModal(category)}
                       className="hover:text-blue-600"
-                      title="Edit Kategori"
                     >
                       <Edit className="w-4 h-4" />
                     </Button>
@@ -224,7 +231,6 @@ export default function CategoriesManagementPage() {
                       variant="ghost"
                       onClick={() => openDeleteModal(category)}
                       className="hover:text-red-600"
-                      title="Hapus Kategori"
                     >
                       <Trash2 className="w-4 h-4" />
                     </Button>
@@ -341,4 +347,3 @@ export default function CategoriesManagementPage() {
     </div>
   );
 }
-
