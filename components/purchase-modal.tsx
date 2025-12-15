@@ -11,7 +11,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { createTransaction } from "@/actions/transactions";
+import { transactionsService } from "@/lib/services/transactions";
 import { toast } from "sonner";
 
 interface PurchaseModalProps {
@@ -51,11 +51,12 @@ export function PurchaseModal({
     setIsProcessing(true);
 
     try {
-      // Create transaction and get Snap token
-      const result = await createTransaction(projectId, price);
+      // Create transaction and get Snap token - call API directly from client
+      // so localStorage auth token is accessible
+      const result = await transactionsService.createTransaction(projectId);
 
-      if (!result.success || !result.token) {
-        toast.error(result.error || "Gagal membuat pembayaran");
+      if (!result.token) {
+        toast.error("Gagal membuat pembayaran");
         setIsProcessing(false);
         return;
       }
