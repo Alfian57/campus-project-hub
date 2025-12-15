@@ -15,7 +15,9 @@ import { Label } from "@/components/ui/label";
 import * as LucideIcons from "lucide-react";
 import { toast } from "sonner";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/v1";
+import { getApiUrl } from "@/lib/env";
+
+const API_BASE_URL = getApiUrl();
 
 export default function EditProjectPage() {
   const { user, isLoading: authLoading } = useAuth();

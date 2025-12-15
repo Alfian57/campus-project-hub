@@ -41,6 +41,15 @@ export default function RootLayout({
             strategy="afterInteractive"
           />
         )}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              window.__ENV__ = {
+                NEXT_PUBLIC_API_URL: "${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/v1"}",
+              };
+            `,
+          }}
+        />
       </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}

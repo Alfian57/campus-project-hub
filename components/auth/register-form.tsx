@@ -14,7 +14,7 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/components/providers/AuthContext";
 import { ApiError } from "@/lib/api";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/v1";
+import { getApiUrl } from "@/lib/env";
 
 const registerSchema = z.object({
   name: z.string().min(2, "Nama minimal 2 karakter"),
@@ -97,7 +97,7 @@ export function RegisterForm() {
   };
 
   const handleSocialRegister = (provider: "google" | "github") => {
-    window.location.href = `${API_BASE_URL}/auth/${provider}`;
+    window.location.href = `${getApiUrl()}/auth/${provider}`;
   };
 
   return (

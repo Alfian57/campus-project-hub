@@ -1,5 +1,6 @@
 "use client";
 
+import { getApiUrl } from "@/lib/env";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -63,7 +64,7 @@ export function LoginForm() {
 
   const handleSocialLogin = (provider: "google" | "github") => {
     // Redirect to OAuth endpoint
-    window.location.href = `${API_BASE_URL}/auth/${provider}`;
+    window.location.href = `${getApiUrl()}/auth/${provider}`;
   };
 
   return (

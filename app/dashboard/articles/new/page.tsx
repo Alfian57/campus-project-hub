@@ -14,7 +14,9 @@ import { ACTION_POINTS } from "@/lib/config/gamification";
 import { toast } from "sonner";
 import { articlesService } from "@/lib/services/articles";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/v1";
+import { getApiUrl } from "@/lib/env";
+
+const API_BASE_URL = getApiUrl();
 
 // Article categories
 const articleCategories = [

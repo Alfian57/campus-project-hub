@@ -1,6 +1,7 @@
 import { ApiResponse } from "@/types/api";
+import { getApiUrl } from "@/lib/env";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/v1";
+const API_BASE_URL = getApiUrl();
 
 // Token management
 const TOKEN_KEY = "auth_token";
@@ -104,7 +105,7 @@ async function tryRefreshToken(): Promise<boolean> {
   if (!refreshToken) return false;
 
   try {
-    const response = await fetch(`${API_BASE_URL}/auth/refresh`, {
+    const response = await fetch(`${getApiUrl()}/auth/refresh`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ refreshToken }),

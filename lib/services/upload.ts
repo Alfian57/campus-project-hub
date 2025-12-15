@@ -1,6 +1,8 @@
 import { getAuthToken } from "@/lib/api";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/v1";
+import { getApiUrl } from "@/lib/env";
+
+const API_BASE_URL = getApiUrl();
 
 export interface UploadResponse {
   filename: string;
@@ -23,7 +25,7 @@ export async function uploadFile(file: File): Promise<UploadResponse> {
   const formData = new FormData();
   formData.append("file", file);
 
-  const response = await fetch(`${API_BASE_URL}/upload`, {
+  const response = await fetch(`${getApiUrl()}/upload`, {
     method: "POST",
     headers: {
       ...(token && { Authorization: `Bearer ${token}` }),
@@ -61,7 +63,7 @@ export async function uploadMultipleFiles(files: File[]): Promise<UploadResponse
 export async function deleteFile(filename: string): Promise<void> {
   const token = getAuthToken();
   
-  const response = await fetch(`${API_BASE_URL}/upload/${filename}`, {
+  const response = await fetch(`${getApiUrl()}/upload/${filename}`, {
     method: "DELETE",
     headers: {
       ...(token && { Authorization: `Bearer ${token}` }),

@@ -16,7 +16,9 @@ import * as LucideIcons from "lucide-react";
 import { ACTION_POINTS } from "@/lib/config/gamification";
 import { toast } from "sonner";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/v1";
+import { getApiUrl } from "@/lib/env";
+
+const API_BASE_URL = getApiUrl();
 
 export default function NewProjectPage() {
   const { user, isLoading: authLoading } = useAuth();
