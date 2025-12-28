@@ -41,7 +41,7 @@ export const projectsService = {
     if (params.search) queryParams.append("search", params.search);
     if (params.category) queryParams.append("category", params.category);
     if (params.status) queryParams.append("status", params.status);
-    if (params.userId) queryParams.append("userId", params.userId);
+    if (params.userId) queryParams.append("user_id", params.userId);
     if (params.techStack) queryParams.append("techStack", params.techStack);
     if (params.sortBy) queryParams.append("sort_by", params.sortBy);
     if (params.sortDirection) queryParams.append("sort_direction", params.sortDirection);

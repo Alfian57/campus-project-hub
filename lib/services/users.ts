@@ -145,13 +145,20 @@ export const usersService = {
    */
   async getLeaderboard(limit: number = 10): Promise<LeaderboardEntry[]> {
     try {
-      const response = await api.get<LeaderboardEntry[]>(`/users/leaderboard?limit=${limit}`);
+      const response = await api.get<{ leaderboard: LeaderboardEntry[] }>(`/users/leaderboard?limit=${limit}`);
       
-      if (response.success && response.data && Array.isArray(response.data)) {
-        return response.data;
+      if (response.success && response.data) {
+        // API returns { leaderboard: [...] }
+        if (Array.isArray(response.data.leaderboard)) {
+          return response.data.leaderboard;
+        }
+        // Fallback if data is already an array
+        if (Array.isArray(response.data)) {
+          return response.data as unknown as LeaderboardEntry[];
+        }
       }
       
-      // Return empty array if data is not an array
+      // Return empty array if data is not in expected format
       return [];
     } catch (error) {
       console.error("Error fetching leaderboard:", error);

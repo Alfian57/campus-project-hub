@@ -7,14 +7,20 @@ import { usersService } from "@/lib/services/users";
 import { LeaderboardCard } from "@/components/dashboard/leaderboard-card";
 import { LevelBadge } from "@/components/dashboard/level-badge";
 import { ExpProgress } from "@/components/dashboard/exp-progress";
+import { Button } from "@/components/ui/button";
 import * as LucideIcons from "lucide-react";
 import { LeaderboardEntry } from "@/types/api";
+
+const ITEMS_PER_PAGE = 10;
 
 export default function LeaderboardPage() {
   const { user, isLoading: authLoading } = useAuth();
   const router = useRouter();
   const [rankedUsers, setRankedUsers] = useState<LeaderboardEntry[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  
+  // Pagination
+  const [currentPage, setCurrentPage] = useState(1);
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -25,7 +31,7 @@ export default function LeaderboardPage() {
   useEffect(() => {
     async function fetchLeaderboard() {
       try {
-        const data = await usersService.getLeaderboard(50);
+        const data = await usersService.getLeaderboard(100); // Fetch more for pagination
         setRankedUsers(data);
       } catch (error) {
         console.error("Error fetching leaderboard:", error);
@@ -50,6 +56,12 @@ export default function LeaderboardPage() {
 
   // Top 3 users for podium
   const topThree = rankedUsers.slice(0, 3);
+
+  // Pagination calculations
+  const totalPages = Math.ceil(rankedUsers.length / ITEMS_PER_PAGE);
+  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+  const endIndex = startIndex + ITEMS_PER_PAGE;
+  const paginatedUsers = rankedUsers.slice(startIndex, endIndex);
 
   return (
     <div className="max-w-4xl mx-auto space-y-8">
@@ -152,30 +164,98 @@ export default function LeaderboardPage() {
 
       {/* Full Ranking List */}
       <div className="space-y-3">
-        <h2 className="text-xl font-bold text-zinc-100 flex items-center gap-2">
-          <LucideIcons.Users className="w-5 h-5 text-zinc-400" />
-          Peringkat Lengkap
-        </h2>
+        <div className="flex items-center justify-between">
+          <h2 className="text-xl font-bold text-zinc-100 flex items-center gap-2">
+            <LucideIcons.Users className="w-5 h-5 text-zinc-400" />
+            Peringkat Lengkap
+          </h2>
+          {rankedUsers.length > 0 && (
+            <span className="text-sm text-zinc-500">
+              {rankedUsers.length} pengguna
+            </span>
+          )}
+        </div>
 
         {isLoading ? (
           <div className="text-center py-8 text-zinc-500">Memuat...</div>
         ) : rankedUsers.length > 0 ? (
-          <div className="space-y-2">
-            {rankedUsers.map((entry, index) => (
-              <LeaderboardCard
-                key={entry.user.id}
-                user={{
-                  id: entry.user.id,
-                  name: entry.user.name,
-                  avatarUrl: entry.user.avatarUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${entry.user.name}`,
-                  university: entry.user.university || "",
-                  totalExp: entry.totalExp,
-                }}
-                rank={index + 1}
-                isCurrentUser={entry.user.id === user.id}
-              />
-            ))}
-          </div>
+          <>
+            <div className="space-y-2">
+              {paginatedUsers.map((entry) => (
+                <LeaderboardCard
+                  key={entry.user.id}
+                  user={{
+                    id: entry.user.id,
+                    name: entry.user.name,
+                    avatarUrl: entry.user.avatarUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${entry.user.name}`,
+                    university: entry.user.university || "",
+                    totalExp: entry.totalExp,
+                  }}
+                  rank={entry.rank}
+                  isCurrentUser={entry.user.id === user.id}
+                />
+              ))}
+            </div>
+
+            {/* Pagination Controls */}
+            {totalPages > 1 && (
+              <div className="flex items-center justify-between border-t border-zinc-800 pt-4 mt-4">
+                <span className="text-sm text-zinc-500">
+                  Menampilkan {startIndex + 1}-{Math.min(endIndex, rankedUsers.length)} dari {rankedUsers.length}
+                </span>
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                    disabled={currentPage <= 1}
+                  >
+                    <LucideIcons.ChevronLeft className="w-4 h-4" />
+                    Prev
+                  </Button>
+                  
+                  {/* Page Numbers */}
+                  <div className="flex items-center gap-1">
+                    {Array.from({ length: totalPages }, (_, i) => i + 1)
+                      .filter((page) => {
+                        // Show first, last, and pages around current
+                        return (
+                          page === 1 ||
+                          page === totalPages ||
+                          Math.abs(page - currentPage) <= 1
+                        );
+                      })
+                      .map((page, idx, arr) => (
+                        <>
+                          {idx > 0 && arr[idx - 1] !== page - 1 && (
+                            <span key={`ellipsis-${page}`} className="text-zinc-500 px-1">...</span>
+                          )}
+                          <Button
+                            key={page}
+                            variant={currentPage === page ? "default" : "outline"}
+                            size="sm"
+                            className="w-8 h-8 p-0"
+                            onClick={() => setCurrentPage(page)}
+                          >
+                            {page}
+                          </Button>
+                        </>
+                      ))}
+                  </div>
+                  
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                    disabled={currentPage >= totalPages}
+                  >
+                    Next
+                    <LucideIcons.ChevronRight className="w-4 h-4" />
+                  </Button>
+                </div>
+              </div>
+            )}
+          </>
         ) : (
           <div className="text-center py-8 text-zinc-500">
             Belum ada data leaderboard

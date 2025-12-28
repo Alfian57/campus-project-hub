@@ -1,68 +1,85 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useAuth } from "@/components/providers/AuthContext";
-import { articlesService } from "@/lib/services/articles";
-import { redirect } from "next/navigation";
-import Link from "next/link";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import * as LucideIcons from "lucide-react";
-import { ACTION_POINTS } from "@/lib/config/gamification";
+import { Input } from "@/components/ui/input";
+import { Edit, Trash2, Eye, Loader2, Search, Filter, FileText, Plus, Lightbulb } from "lucide-react";
+import Link from "next/link";
+import { useAuth } from "@/components/providers/AuthContext";
+import { articlesService } from "@/lib/services/articles";
 import { ArticleApiResponse } from "@/types/api";
 import { toast } from "sonner";
+import { ACTION_POINTS } from "@/lib/config/gamification";
 import { ConfirmDeleteModal } from "@/components/admin/confirm-delete-modal";
 
 export default function UserArticlesPage() {
   const { user, isLoading: authLoading } = useAuth();
   const [articles, setArticles] = useState<ArticleApiResponse[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  
-  // Delete modal state
+
+  // Filters
+  const [searchQuery, setSearchQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState("");
+
+  // Pagination
+  const [pagination, setPagination] = useState({
+    page: 1,
+    perPage: 10,
+    totalItems: 0,
+    totalPages: 1,
+  });
+
+  // Delete modal
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [articleToDelete, setArticleToDelete] = useState<ArticleApiResponse | null>(null);
-  const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
-    async function fetchArticles() {
-      if (!user) return;
-      
-      try {
-        const data = await articlesService.getArticles({ 
-          userId: user.id,
-          perPage: 50 
-        });
-        setArticles(data.items);
-      } catch (error) {
-        console.error("Error fetching articles:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    }
+    const timer = setTimeout(() => {
+      setPagination(prev => ({ ...prev, page: 1 }));
+      fetchArticles();
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
 
+  useEffect(() => {
     if (user) {
       fetchArticles();
     }
-  }, [user]);
+  }, [user, pagination.page, pagination.perPage, statusFilter]);
 
-  if (authLoading) {
-    return (
-      <div className="flex items-center justify-center py-20">
-        <LucideIcons.Loader2 className="w-8 h-8 text-blue-500 animate-spin" />
-      </div>
-    );
-  }
-
-  if (!user) {
-    redirect("/login");
-  }
-
-  const formatDate = (dateStr: string) => {
-    return new Intl.DateTimeFormat("id-ID", {
-      day: "numeric",
-      month: "long",
-      year: "numeric",
-    }).format(new Date(dateStr));
+  const fetchArticles = async () => {
+    if (!user) return;
+    
+    setIsLoading(true);
+    try {
+      const data = await articlesService.getArticles({
+        userId: user.id,
+        page: pagination.page,
+        perPage: pagination.perPage,
+        search: searchQuery,
+        status: statusFilter || undefined,
+      });
+      setArticles(data.items);
+      setPagination(prev => ({
+        ...prev,
+        totalItems: data.meta.total_items,
+        totalPages: data.meta.total_pages,
+      }));
+    } catch (error) {
+      console.error("Error fetching articles:", error);
+      toast.error("Gagal memuat artikel");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleDeleteClick = (article: ArticleApiResponse) => {
@@ -73,7 +90,6 @@ export default function UserArticlesPage() {
   const handleConfirmDelete = async () => {
     if (!articleToDelete) return;
     
-    setIsDeleting(true);
     try {
       await articlesService.deleteArticle(articleToDelete.id);
       setArticles(articles.filter(a => a.id !== articleToDelete.id));
@@ -83,59 +99,59 @@ export default function UserArticlesPage() {
     } catch (error) {
       console.error("Error deleting article:", error);
       toast.error("Gagal menghapus artikel");
-    } finally {
-      setIsDeleting(false);
     }
   };
 
+  // Calculate stats
   const totalViews = articles.reduce((sum, a) => sum + (a.viewCount || 0), 0);
 
+  if (authLoading) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <Loader2 className="w-8 h-8 text-blue-500 animate-spin" />
+      </div>
+    );
+  }
+
+  if (!user) return null;
+
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-zinc-50">Artikel Saya</h1>
-          <p className="text-zinc-400 mt-1">
-            Kelola artikel yang telah Anda tulis
+          <h1 className="text-3xl font-bold text-zinc-900 dark:text-zinc-50">
+            Artikel Saya
+          </h1>
+          <p className="text-zinc-600 dark:text-zinc-400 mt-1">
+            Kelola semua artikel Anda
           </p>
         </div>
         <Link href="/dashboard/articles/new">
           <Button className="bg-blue-600 hover:bg-blue-700 gap-2">
-            <LucideIcons.Plus className="w-4 h-4" />
+            <Plus className="w-4 h-4" />
             Buat Artikel
           </Button>
         </Link>
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="p-4 rounded-xl border border-zinc-800 bg-zinc-900/50">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-lg bg-blue-500/10 flex items-center justify-center">
-              <LucideIcons.FileText className="w-5 h-5 text-blue-400" />
+              <FileText className="w-5 h-5 text-blue-400" />
             </div>
             <div>
               <p className="text-sm text-zinc-400">Total Artikel</p>
-              <p className="text-2xl font-bold text-zinc-50">{articles.length}</p>
-            </div>
-          </div>
-        </div>
-        <div className="p-4 rounded-xl border border-zinc-800 bg-zinc-900/50">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-green-500/10 flex items-center justify-center">
-              <LucideIcons.Sparkles className="w-5 h-5 text-green-400" />
-            </div>
-            <div>
-              <p className="text-sm text-zinc-400">EXP per Artikel</p>
-              <p className="text-2xl font-bold text-green-400">+{ACTION_POINTS.CREATE_ARTICLE}</p>
+              <p className="text-2xl font-bold text-zinc-50">{pagination.totalItems}</p>
             </div>
           </div>
         </div>
         <div className="p-4 rounded-xl border border-zinc-800 bg-zinc-900/50">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-lg bg-purple-500/10 flex items-center justify-center">
-              <LucideIcons.Eye className="w-5 h-5 text-purple-400" />
+              <Eye className="w-5 h-5 text-purple-400" />
             </div>
             <div>
               <p className="text-sm text-zinc-400">Total Views</p>
@@ -145,107 +161,206 @@ export default function UserArticlesPage() {
         </div>
       </div>
 
-      {/* Articles List */}
-      {isLoading ? (
+      {/* Filters */}
+      <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
+        <div className="relative flex-1 w-full md:max-w-md">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500" />
+          <Input
+            placeholder="Cari artikel..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-10"
+          />
+        </div>
+
+        <div className="flex flex-wrap gap-2 w-full md:w-auto">
+          {/* Status Filter */}
+          <div className="relative">
+            <select 
+              className="h-10 w-full md:w-[150px] rounded-md border border-zinc-200 bg-white px-3 py-2 text-sm ring-offset-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-950 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 dark:border-zinc-800 dark:bg-zinc-950 dark:ring-offset-zinc-950 dark:focus-visible:ring-zinc-300 cursor-pointer appearance-none dark:text-zinc-100"
+              value={statusFilter}
+              onChange={(e) => {
+                setStatusFilter(e.target.value);
+                setPagination(prev => ({ ...prev, page: 1 }));
+              }}
+            >
+              <option value="" className="dark:bg-zinc-900 dark:text-zinc-100">Semua Status</option>
+              <option value="published" className="dark:bg-zinc-900 dark:text-zinc-100">Terbit</option>
+              <option value="draft" className="dark:bg-zinc-900 dark:text-zinc-100">Draft</option>
+              <option value="blocked" className="dark:bg-zinc-900 dark:text-zinc-100">Diblokir</option>
+            </select>
+            <Filter className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500 pointer-events-none" />
+          </div>
+        </div>
+      </div>
+
+      {/* Articles Table */}
+      {isLoading && articles.length === 0 ? (
         <div className="flex items-center justify-center py-12">
-          <LucideIcons.Loader2 className="w-8 h-8 text-blue-500 animate-spin" />
+          <Loader2 className="w-8 h-8 text-blue-500 animate-spin" />
         </div>
       ) : articles.length > 0 ? (
-        <div className="space-y-4">
-          {articles.map((article) => (
-            <div
-              key={article.id}
-              className="flex items-center gap-4 p-4 rounded-xl border border-zinc-800 bg-zinc-900/50 hover:bg-zinc-900 transition-colors"
-            >
-              {/* Thumbnail */}
-              <img
-                src={article.thumbnailUrl || "/placeholder.jpg"}
-                alt={article.title}
-                className="w-24 h-16 rounded-lg object-cover flex-shrink-0"
-              />
-
-              {/* Content */}
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 mb-1">
-                  <h3 className="font-semibold text-zinc-100 truncate">
-                    {article.title}
-                  </h3>
-                  <Badge variant="secondary" className="text-xs shrink-0">
-                    {article.category || "Umum"}
-                  </Badge>
-                  <Badge 
-                    className={`text-xs shrink-0 ${
-                      article.status === "published" 
-                        ? "bg-green-500/20 text-green-400" 
-                        : article.status === "blocked"
-                        ? "bg-red-500/20 text-red-400"
-                        : "bg-yellow-500/20 text-yellow-400"
-                    }`}
-                  >
-                    {article.status === "published" ? "Terbit" : article.status === "blocked" ? "Diblokir" : "Draft"}
-                  </Badge>
-                </div>
-                <p className="text-sm text-zinc-400 truncate">
-                  {article.excerpt}
-                </p>
-                <div className="flex items-center gap-4 mt-2 text-xs text-zinc-500">
-                  <span className="flex items-center gap-1">
-                    <LucideIcons.Calendar className="w-3.5 h-3.5" />
-                    {formatDate(article.createdAt)}
-                  </span>
-                  <span className="flex items-center gap-1">
-                    <LucideIcons.Clock className="w-3.5 h-3.5" />
-                    {article.readingTime || 5} menit baca
-                  </span>
-                  <span className="flex items-center gap-1">
-                    <LucideIcons.Eye className="w-3.5 h-3.5" />
-                    {article.viewCount || 0} views
-                  </span>
-                </div>
-              </div>
-
-              {/* Actions */}
-              <div className="flex items-center gap-2 shrink-0">
-                <Link href={`/articles/${article.id}`}>
-                  <Button variant="ghost" size="sm" className="gap-1">
-                    <LucideIcons.Eye className="w-4 h-4" />
-                    Lihat
-                  </Button>
-                </Link>
-                <Link href={`/dashboard/articles/${article.id}/edit`}>
-                  <Button variant="ghost" size="sm" className="gap-1 hover:text-blue-500">
-                    <LucideIcons.Edit className="w-4 h-4" />
-                    Edit
-                  </Button>
-                </Link>
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  className="gap-1 hover:text-red-500"
-                  onClick={() => handleDeleteClick(article)}
-                >
-                  <LucideIcons.Trash2 className="w-4 h-4" />
-                  Hapus
-                </Button>
-              </div>
-            </div>
-          ))}
+        <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 overflow-hidden">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Artikel</TableHead>
+                <TableHead>Kategori</TableHead>
+                <TableHead>Views</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead className="text-right">Aksi</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {articles.map((article) => (
+                <TableRow key={article.id}>
+                  <TableCell>
+                    <div className="flex items-center gap-3">
+                      <img
+                        src={article.thumbnailUrl || "/placeholder.jpg"}
+                        alt={article.title}
+                        className="w-16 h-10 rounded-lg object-cover"
+                      />
+                      <div>
+                        <div className="font-medium text-zinc-900 dark:text-zinc-50 line-clamp-1">
+                          {article.title}
+                        </div>
+                        <div className="text-sm text-zinc-500 line-clamp-1">
+                          {article.excerpt?.slice(0, 50)}...
+                        </div>
+                      </div>
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant="secondary" className="text-xs">
+                      {article.category || "Umum"}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-1">
+                      👁️ {article.viewCount || 0}
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <Badge 
+                      className={
+                        article.status === "published" 
+                          ? "bg-green-100 text-green-700 dark:bg-green-900/20 dark:text-green-400"
+                          : article.status === "blocked"
+                          ? "bg-red-100 text-red-700 dark:bg-red-900/20 dark:text-red-400"
+                          : "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/20 dark:text-yellow-400"
+                      }
+                    >
+                      {article.status === "published" ? "Terbit" : article.status === "blocked" ? "Diblokir" : "Draft"}
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <div className="flex items-center justify-end gap-2">
+                      <Link href={`/dashboard/articles/${article.id}`}>
+                        <Button size="sm" variant="ghost">
+                          <Eye className="w-4 h-4" />
+                        </Button>
+                      </Link>
+                      {article.status !== "blocked" ? (
+                        <Link href={`/dashboard/articles/${article.id}/edit`}>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="hover:text-blue-600"
+                          >
+                            <Edit className="w-4 h-4" />
+                          </Button>
+                        </Link>
+                      ) : (
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          disabled
+                          className="opacity-50 cursor-not-allowed"
+                        >
+                          <Edit className="w-4 h-4" />
+                        </Button>
+                      )}
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="hover:text-red-600"
+                        onClick={() => handleDeleteClick(article)}
+                        disabled={article.status === "blocked"}
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
         </div>
       ) : (
         <div className="text-center py-16 bg-zinc-900/50 rounded-xl border border-zinc-800">
-          <LucideIcons.FileText className="w-12 h-12 text-zinc-600 mx-auto mb-4" />
+          <FileText className="w-12 h-12 text-zinc-600 mx-auto mb-4" />
           <h3 className="text-lg font-semibold text-zinc-300 mb-2">
-            Belum Ada Artikel
+            {searchQuery || statusFilter ? "Tidak ada artikel yang cocok" : "Belum Ada Artikel"}
           </h3>
           <p className="text-zinc-500 mb-6">
-            Mulai berbagi pengetahuan dengan menulis artikel pertamamu!
+            {searchQuery || statusFilter 
+              ? "Coba ubah filter pencarian Anda"
+              : "Mulai berbagi pengetahuan dengan menulis artikel pertamamu!"}
           </p>
-          <Link href="/dashboard/articles/new">
-            <Button className="bg-blue-600 hover:bg-blue-700 gap-2">
-              <LucideIcons.Plus className="w-4 h-4" />
-              Buat Artikel Pertama
-            </Button>
-          </Link>
+          {!searchQuery && !statusFilter && (
+            <Link href="/dashboard/articles/new">
+              <Button className="bg-blue-600 hover:bg-blue-700 gap-2">
+                <Plus className="w-4 h-4" />
+                Buat Artikel Pertama
+              </Button>
+            </Link>
+          )}
+        </div>
+      )}
+
+      {/* Pagination Controls */}
+      {pagination.totalItems > 0 && (
+        <div className="flex items-center justify-between border-t border-zinc-800 pt-4">
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-zinc-600 dark:text-zinc-400">Baris per halaman:</span>
+            <div className="relative">
+              <select
+                className="h-9 w-[70px] rounded-md border border-zinc-200 bg-white px-2 py-1 text-sm ring-offset-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-950 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 dark:border-zinc-800 dark:bg-zinc-950 dark:ring-offset-zinc-950 dark:focus-visible:ring-zinc-300 cursor-pointer appearance-none dark:text-zinc-100"
+                value={pagination.perPage}
+                onChange={(e) => setPagination(prev => ({ ...prev, perPage: Number(e.target.value), page: 1 }))}
+              >
+                <option value="10" className="dark:bg-zinc-900">10</option>
+                <option value="20" className="dark:bg-zinc-900">20</option>
+                <option value="50" className="dark:bg-zinc-900">50</option>
+                <option value="100" className="dark:bg-zinc-900">100</option>
+              </select>
+            </div>
+          </div>
+          
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-zinc-600 dark:text-zinc-400">
+              Halaman {pagination.page} dari {pagination.totalPages}
+            </span>
+            <div className="flex gap-1">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setPagination(prev => ({ ...prev, page: prev.page - 1 }))}
+                disabled={pagination.page <= 1}
+              >
+                Prev
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setPagination(prev => ({ ...prev, page: prev.page + 1 }))}
+                disabled={pagination.page >= pagination.totalPages}
+              >
+                Next
+              </Button>
+            </div>
+          </div>
         </div>
       )}
 
@@ -253,7 +368,7 @@ export default function UserArticlesPage() {
       <div className="bg-gradient-to-r from-blue-600/10 to-cyan-600/10 rounded-xl border border-blue-500/20 p-6">
         <div className="flex items-start gap-4">
           <div className="w-10 h-10 rounded-lg bg-blue-500/20 flex items-center justify-center shrink-0">
-            <LucideIcons.Lightbulb className="w-5 h-5 text-blue-400" />
+            <Lightbulb className="w-5 h-5 text-blue-400" />
           </div>
           <div>
             <h3 className="font-semibold text-zinc-100 mb-2">Tips Menulis Artikel</h3>

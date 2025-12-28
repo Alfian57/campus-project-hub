@@ -277,9 +277,9 @@ export default function EditArticlePage() {
                   required
                   className={`w-full mt-1.5 h-10 px-3 bg-zinc-800/50 border rounded-lg text-zinc-100 focus:outline-none focus:ring-2 focus:ring-blue-500/40 ${fieldErrors.category ? 'border-red-500' : 'border-zinc-700'}`}
                 >
-                  <option value="">Pilih kategori</option>
+                  <option value="" className="bg-zinc-900 text-zinc-100">Pilih kategori</option>
                   {articleCategories.map((cat) => (
-                    <option key={cat.value} value={cat.label}>
+                    <option key={cat.value} value={cat.label} className="bg-zinc-900 text-zinc-100">
                       {cat.label}
                     </option>
                   ))}
@@ -298,50 +298,59 @@ export default function EditArticlePage() {
                   onChange={handleChange}
                   className="w-full mt-1.5 h-10 px-3 bg-zinc-800/50 border border-zinc-700 rounded-lg text-zinc-100 focus:outline-none focus:ring-2 focus:ring-blue-500/40"
                 >
-                  <option value="published">Terbit</option>
-                  <option value="draft">Draft</option>
+                  <option value="published" className="bg-zinc-900 text-zinc-100">Terbit</option>
+                  <option value="draft" className="bg-zinc-900 text-zinc-100">Draft</option>
                 </select>
               </div>
             </div>
+          </div>
+        </div>
 
-            <div>
-              <Label>Thumbnail</Label>
-              <div className="mt-1.5">
-                {thumbnailPreview ? (
-                  <div className="relative w-full h-10 flex items-center gap-2 px-3 bg-zinc-800/50 border border-zinc-700 rounded-lg">
-                    <img
-                      src={getAssetUrl(thumbnailPreview)}
-                      alt="Thumbnail"
-                      className="w-8 h-8 rounded object-cover"
-                    />
-                    <span className="text-sm text-zinc-300 truncate flex-1">
-                      {thumbnailFile?.name || "Thumbnail saat ini"}
-                    </span>
-                    <button
-                      type="button"
-                      onClick={removeThumbnail}
-                      className="p-1 hover:bg-zinc-700 rounded transition-colors"
-                    >
-                      <LucideIcons.X className="w-4 h-4 text-zinc-400" />
-                    </button>
-                  </div>
-                ) : (
-                  <div
-                    onClick={() => thumbnailInputRef.current?.click()}
-                    className="w-full h-10 flex items-center gap-2 px-3 bg-zinc-800/50 border border-dashed border-zinc-700 rounded-lg cursor-pointer hover:border-blue-500 hover:bg-zinc-800 transition-colors"
+        {/* Thumbnail Section */}
+        <div className="bg-zinc-900/50 rounded-xl border border-zinc-800 p-6 space-y-6">
+          <h3 className="font-semibold text-zinc-100 flex items-center gap-2">
+            <LucideIcons.Image className="w-5 h-5 text-zinc-400" />
+            Thumbnail Artikel
+          </h3>
+
+          <div>
+            <Label className="text-sm font-medium">Gambar Thumbnail</Label>
+            <p className="text-xs text-zinc-500 mt-0.5 mb-3">Gambar utama yang akan ditampilkan di daftar artikel</p>
+            <div className="mt-1.5">
+              {thumbnailPreview ? (
+                <div className="relative w-full aspect-video rounded-xl overflow-hidden border border-zinc-700 bg-zinc-800">
+                  <img
+                    src={getAssetUrl(thumbnailPreview)}
+                    alt="Thumbnail preview"
+                    className="w-full h-full object-cover"
+                  />
+                  <button
+                    type="button"
+                    onClick={removeThumbnail}
+                    className="absolute top-3 right-3 p-2 bg-red-500 rounded-lg hover:bg-red-600 transition-colors shadow-lg"
                   >
-                    <LucideIcons.Upload className="w-4 h-4 text-zinc-500" />
-                    <span className="text-sm text-zinc-500">Upload thumbnail</span>
+                    <LucideIcons.X className="w-4 h-4 text-white" />
+                  </button>
+                </div>
+              ) : (
+                <div
+                  onClick={() => thumbnailInputRef.current?.click()}
+                  className="w-full aspect-video border-2 border-dashed border-zinc-700 rounded-xl flex flex-col items-center justify-center cursor-pointer hover:border-blue-500 hover:bg-zinc-800/50 transition-all group"
+                >
+                  <div className="w-16 h-16 rounded-full bg-zinc-800 flex items-center justify-center mb-4 group-hover:bg-blue-500/20 transition-colors">
+                    <LucideIcons.Upload className="w-8 h-8 text-zinc-500 group-hover:text-blue-400 transition-colors" />
                   </div>
-                )}
-                <input
-                  ref={thumbnailInputRef}
-                  type="file"
-                  accept="image/*"
-                  onChange={handleThumbnailChange}
-                  className="hidden"
-                />
-              </div>
+                  <span className="text-sm text-zinc-400 font-medium">Klik untuk upload thumbnail</span>
+                  <span className="text-xs text-zinc-500 mt-1">Format: JPG, PNG, WebP (max 5MB)</span>
+                </div>
+              )}
+              <input
+                ref={thumbnailInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handleThumbnailChange}
+                className="hidden"
+              />
             </div>
           </div>
         </div>
@@ -382,23 +391,6 @@ export default function EditArticlePage() {
             </p>
           </div>
         </div>
-
-        {/* Preview Thumbnail */}
-        {thumbnailPreview && (
-          <div className="bg-zinc-900/50 rounded-xl border border-zinc-800 p-6 space-y-4">
-            <h3 className="font-semibold text-zinc-100 flex items-center gap-2">
-              <LucideIcons.Image className="w-5 h-5 text-zinc-400" />
-              Preview Thumbnail
-            </h3>
-            <div className="relative aspect-video max-w-md rounded-lg overflow-hidden bg-zinc-800">
-              <img
-                src={getAssetUrl(thumbnailPreview)}
-                alt="Preview"
-                className="w-full h-full object-cover"
-              />
-            </div>
-          </div>
-        )}
 
         {/* Actions */}
         <div className="flex items-center justify-between pt-4 border-t border-zinc-800">

@@ -11,9 +11,10 @@ import { getAssetUrl } from "@/lib/env";
 
 interface ProjectCardProps {
   project: Project;
+  href?: string;
 }
 
-export function ProjectCard({ project }: ProjectCardProps) {
+export function ProjectCard({ project, href }: ProjectCardProps) {
   const [isHovered, setIsHovered] = useState(false);
   const [likes] = useState(project.stats.likes);
   const [isLiked] = useState(false); // We can default to false or pass from props if needed, but pure read-only for now on list view is fine or we can use project.stats.isLiked if available
@@ -28,7 +29,7 @@ export function ProjectCard({ project }: ProjectCardProps) {
       className="group relative"
     >
       <div className="overflow-hidden rounded-xl border border-zinc-800 bg-zinc-900 shadow-md transition-all duration-300 hover:shadow-xl hover:shadow-blue-500/10 h-full relative group">
-        <Link href={`/project/${project.id}`} className="absolute inset-0 z-0">
+        <Link href={href || `/project/${project.id}`} className="absolute inset-0 z-0">
           <span className="sr-only">View Project</span>
         </Link>
 

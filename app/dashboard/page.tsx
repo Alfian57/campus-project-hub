@@ -145,17 +145,6 @@ export default function DashboardPage() {
           />
         </div>
 
-        {/* Quick Actions */}
-        <div className="flex items-center gap-4">
-          <Link href="/dashboard/projects/new">
-            <Button className="bg-blue-600 hover:bg-blue-700">
-              Unggah Proyek Baru
-            </Button>
-          </Link>
-          <Link href="/dashboard/projects">
-            <Button variant="outline">Kelola Proyek</Button>
-          </Link>
-        </div>
 
         {/* Recent Projects */}
         <div>
@@ -173,7 +162,7 @@ export default function DashboardPage() {
           {projects.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {projects.slice(0, 3).map((project) => (
-                <ProjectCard key={project.id} project={project} />
+                <ProjectCard key={project.id} project={project} href={`/dashboard/projects/${project.id}`} />
               ))}
             </div>
           ) : (

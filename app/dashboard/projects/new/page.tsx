@@ -290,9 +290,9 @@ export default function NewProjectPage() {
                   onChange={handleChange}
                   className="w-full mt-1.5 h-10 px-3 bg-zinc-800/50 border border-zinc-700 rounded-lg text-zinc-100 focus:outline-none focus:ring-2 focus:ring-blue-500/40"
                 >
-                  <option value="">Pilih kategori</option>
+                  <option value="" className="bg-zinc-900 text-zinc-100">Pilih kategori</option>
                   {categories.map((cat) => (
-                    <option key={cat.id} value={cat.id}>
+                    <option key={cat.id} value={cat.id} className="bg-zinc-900 text-zinc-100">
                       {cat.name}
                     </option>
                   ))}
@@ -315,19 +315,20 @@ export default function NewProjectPage() {
         </div>
 
         {/* Media - File Upload */}
-        <div className="bg-zinc-900/50 rounded-xl border border-zinc-800 p-6 space-y-4">
+        <div className="bg-zinc-900/50 rounded-xl border border-zinc-800 p-6 space-y-6">
           <h3 className="font-semibold text-zinc-100 flex items-center gap-2">
             <LucideIcons.Image className="w-5 h-5 text-zinc-400" />
             Media
           </h3>
 
-          <div className="grid gap-4">
+          <div className="space-y-6">
             {/* Thumbnail Upload */}
             <div>
-              <Label>Thumbnail</Label>
+              <Label className="text-sm font-medium">Thumbnail Utama</Label>
+              <p className="text-xs text-zinc-500 mt-0.5 mb-3">Gambar utama yang akan ditampilkan di kartu proyek</p>
               <div className="mt-1.5">
                 {thumbnailPreview ? (
-                  <div className="relative w-48 h-32 rounded-lg overflow-hidden border border-zinc-700">
+                  <div className="relative w-full aspect-video rounded-xl overflow-hidden border border-zinc-700 bg-zinc-800">
                     <img
                       src={thumbnailPreview}
                       alt="Thumbnail preview"
@@ -336,7 +337,7 @@ export default function NewProjectPage() {
                     <button
                       type="button"
                       onClick={removeThumbnail}
-                      className="absolute top-2 right-2 p-1 bg-red-500 rounded-full hover:bg-red-600 transition-colors"
+                      className="absolute top-3 right-3 p-2 bg-red-500 rounded-lg hover:bg-red-600 transition-colors shadow-lg"
                     >
                       <LucideIcons.X className="w-4 h-4 text-white" />
                     </button>
@@ -344,10 +345,13 @@ export default function NewProjectPage() {
                 ) : (
                   <div
                     onClick={() => thumbnailInputRef.current?.click()}
-                    className="w-48 h-32 border-2 border-dashed border-zinc-700 rounded-lg flex flex-col items-center justify-center cursor-pointer hover:border-blue-500 hover:bg-zinc-800/50 transition-colors"
+                    className="w-full aspect-video border-2 border-dashed border-zinc-700 rounded-xl flex flex-col items-center justify-center cursor-pointer hover:border-blue-500 hover:bg-zinc-800/50 transition-all group"
                   >
-                    <LucideIcons.Upload className="w-6 h-6 text-zinc-500 mb-2" />
-                    <span className="text-sm text-zinc-500">Upload Thumbnail</span>
+                    <div className="w-16 h-16 rounded-full bg-zinc-800 flex items-center justify-center mb-4 group-hover:bg-blue-500/20 transition-colors">
+                      <LucideIcons.Upload className="w-8 h-8 text-zinc-500 group-hover:text-blue-400 transition-colors" />
+                    </div>
+                    <span className="text-sm text-zinc-400 font-medium">Klik untuk upload thumbnail</span>
+                    <span className="text-xs text-zinc-500 mt-1">Format: JPG, PNG, WebP (max 5MB)</span>
                   </div>
                 )}
                 <input
@@ -362,10 +366,11 @@ export default function NewProjectPage() {
 
             {/* Additional Images Upload */}
             <div>
-              <Label>Gambar Tambahan</Label>
-              <div className="mt-1.5 flex flex-wrap gap-3">
+              <Label className="text-sm font-medium">Gambar Tambahan</Label>
+              <p className="text-xs text-zinc-500 mt-0.5 mb-3">Screenshot atau gambar detail proyek Anda</p>
+              <div className="mt-1.5 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
                 {imagePreviews.map((preview, index) => (
-                  <div key={index} className="relative w-24 h-24 rounded-lg overflow-hidden border border-zinc-700">
+                  <div key={index} className="relative aspect-video rounded-lg overflow-hidden border border-zinc-700 bg-zinc-800 group">
                     <img
                       src={preview}
                       alt={`Image ${index + 1}`}
@@ -374,7 +379,7 @@ export default function NewProjectPage() {
                     <button
                       type="button"
                       onClick={() => removeImage(index)}
-                      className="absolute top-1 right-1 p-0.5 bg-red-500 rounded-full hover:bg-red-600 transition-colors"
+                      className="absolute top-2 right-2 p-1.5 bg-red-500 rounded-lg hover:bg-red-600 transition-colors opacity-0 group-hover:opacity-100"
                     >
                       <LucideIcons.X className="w-3 h-3 text-white" />
                     </button>
@@ -382,10 +387,10 @@ export default function NewProjectPage() {
                 ))}
                 <div
                   onClick={() => imagesInputRef.current?.click()}
-                  className="w-24 h-24 border-2 border-dashed border-zinc-700 rounded-lg flex flex-col items-center justify-center cursor-pointer hover:border-blue-500 hover:bg-zinc-800/50 transition-colors"
+                  className="aspect-video border-2 border-dashed border-zinc-700 rounded-lg flex flex-col items-center justify-center cursor-pointer hover:border-blue-500 hover:bg-zinc-800/50 transition-all"
                 >
-                  <LucideIcons.Plus className="w-5 h-5 text-zinc-500" />
-                  <span className="text-xs text-zinc-500">Tambah</span>
+                  <LucideIcons.Plus className="w-6 h-6 text-zinc-500 mb-1" />
+                  <span className="text-xs text-zinc-500">Tambah Gambar</span>
                 </div>
                 <input
                   ref={imagesInputRef}
@@ -457,8 +462,8 @@ export default function NewProjectPage() {
                 onChange={handleChange}
                 className="w-full mt-1.5 h-10 px-3 bg-zinc-800/50 border border-zinc-700 rounded-lg text-zinc-100 focus:outline-none focus:ring-2 focus:ring-blue-500/40"
               >
-                <option value="free">Gratis</option>
-                <option value="paid">Berbayar</option>
+                <option value="free" className="bg-zinc-900 text-zinc-100">Gratis</option>
+                <option value="paid" className="bg-zinc-900 text-zinc-100">Berbayar</option>
               </select>
             </div>
 
