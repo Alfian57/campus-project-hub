@@ -43,11 +43,11 @@ export default function AdminPage() {
         .reduce((sum, t) => sum + t.amount, 0);
 
       setStats({
-        totalUsers: usersData.total,
+        totalUsers: usersData.meta.total_items,
         activeUsers,
         blockedUsers,
-        totalProjects: projectsData.total,
-        totalCategories: categoriesData.length,
+        totalProjects: projectsData.meta.total_items,
+        totalCategories: categoriesData.meta.total_items,
         totalRevenue,
       });
 

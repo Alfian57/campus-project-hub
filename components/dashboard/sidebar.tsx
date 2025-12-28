@@ -58,7 +58,7 @@ export function Sidebar({ role = "user" }: SidebarProps) {
   const adminLinks: NavLink[] = [
     {
       href: "/dashboard/admin",
-      label: "Dashboard Admin",
+      label: "Dashboard",
       iconName: "LayoutDashboard",
     },
     {
@@ -94,7 +94,7 @@ export function Sidebar({ role = "user" }: SidebarProps) {
   const moderatorLinks: NavLink[] = [
     {
       href: "/dashboard/moderator",
-      label: "Dashboard Moderator",
+      label: "Dashboard",
       iconName: "LayoutDashboard",
     },
     {
@@ -224,7 +224,7 @@ export function Sidebar({ role = "user" }: SidebarProps) {
         {/* User Info - Clickable to toggle menu */}
         <button
           onClick={() => setIsMenuOpen(!isMenuOpen)}
-          className="w-full flex items-center gap-3 hover:bg-zinc-50 dark:hover:bg-zinc-800/50 -mx-2 px-2 py-1 rounded-lg transition-colors"
+          className="w-full flex items-center gap-3 hover:bg-zinc-50 dark:hover:bg-zinc-800/50 -mx-2 px-2 py-1 rounded-lg transition-colors cursor-pointer"
         >
           <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center text-white font-semibold text-sm">
             {user?.name?.charAt(0) || "U"}
@@ -253,14 +253,14 @@ export function Sidebar({ role = "user" }: SidebarProps) {
             >
               <div className="pt-3 mt-3 border-t border-zinc-100 dark:border-zinc-800 space-y-1">
                 <Link href="/dashboard/profile">
-                  <button className="w-full flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300 text-sm transition-colors">
+                  <button className="w-full flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300 text-sm transition-colors cursor-pointer">
                     <LucideIcons.User className="w-4 h-4" />
                     <span>Profil Saya</span>
                   </button>
                 </Link>
                 <button 
                   onClick={() => setIsLogoutModalOpen(true)}
-                  className="w-full flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 text-red-600 dark:text-red-400 text-sm transition-colors"
+                  className="w-full flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 text-red-600 dark:text-red-400 text-sm transition-colors cursor-pointer"
                 >
                   <LucideIcons.LogOut className="w-4 h-4" />
                   <span>Keluar</span>

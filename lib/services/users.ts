@@ -7,6 +7,8 @@ export interface GetUsersParams {
   search?: string;
   role?: string;
   status?: string;
+  sortBy?: string;
+  sortDirection?: "asc" | "desc";
 }
 
 export interface UpdateUserInput {
@@ -16,30 +18,69 @@ export interface UpdateUserInput {
   bio?: string;
   phone?: string;
   avatarUrl?: string;
+  role?: string; // Admin only
+  password?: string; // Admin only
+}
+
+export interface CreateUserParams {
+  name: string;
+  email: string;
+  password?: string;
+  role: "user" | "admin" | "moderator";
+  university?: string;
+  major?: string;
 }
 
 export const usersService = {
   /**
-   * Get paginated list of users (admin only)
+   * Create user (admin only)
    */
-  async getUsers(params: GetUsersParams = {}): Promise<PaginatedData<UserApiResponse>> {
-    const queryString = buildQueryString({
-      page: params.page || 1,
-      perPage: params.perPage || 12,
-      search: params.search,
-      role: params.role,
-      status: params.status,
-    });
-    
-    const response = await api.get<PaginatedData<UserApiResponse>>(`/users${queryString}`);
+  async createUser(data: CreateUserParams): Promise<UserApiResponse> {
+    const response = await api.post<UserApiResponse>("/users", data);
     
     if (response.success && response.data) {
       return response.data;
     }
     
-    throw new Error(response.message || "Failed to fetch users");
+    throw new Error(response.message || "Failed to create user");
   },
 
+  /**
+   * Get paginated list of users (admin only)
+   */
+  async getUsers(params: GetUsersParams = {}) {
+    const queryParams = new URLSearchParams();
+    if (params.page) queryParams.append("page", params.page.toString());
+    if (params.perPage) queryParams.append("per_page", params.perPage.toString());
+    if (params.search) queryParams.append("search", params.search);
+    if (params.role && params.role !== "all") queryParams.append("role", params.role);
+    if (params.status && params.status !== "all") queryParams.append("status", params.status);
+    if (params.sortBy) queryParams.append("sort_by", params.sortBy);
+    if (params.sortDirection) queryParams.append("sort_direction", params.sortDirection);
+
+    // api.get returns the body directly: { success: true, data: { items: ..., total: ... } }
+    const response = await api.get<{
+      items: UserApiResponse[];
+      total: number;
+      page: number;
+      perPage: number;
+      totalPages: number;
+    }>(`/users?${queryParams.toString()}`);
+
+    if (response.success && response.data) {
+        return {
+            items: response.data.items,
+            meta: {
+                current_page: response.data.page,
+                per_page: response.data.perPage,
+                total_items: response.data.total,
+                total_pages: response.data.totalPages,
+            }
+        };
+    }
+
+    throw new Error(response.message || "Failed to fetch users");
+  },
   /**
    * Get single user by ID
    */

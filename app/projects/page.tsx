@@ -72,14 +72,14 @@ function ProjectsContent() {
       });
       
       setProjects(data.items.map(mapApiToProject));
-      setTotalCount(data.total);
+      setTotalCount(data.meta.total_items);
       
       // Count free and paid for filters (only if no specific filters active to save requests)
       if (filter === "all" && !debouncedSearch && !techStackParam) {
         const freeData = await projectsService.getProjects({ type: "free", perPage: 1 });
         const paidData = await projectsService.getProjects({ type: "paid", perPage: 1 });
-        setFreeCount(freeData.total);
-        setPaidCount(paidData.total);
+        setFreeCount(freeData.meta.total_items);
+        setPaidCount(paidData.meta.total_items);
       }
     } catch (error) {
       console.error("Error fetching projects:", error);

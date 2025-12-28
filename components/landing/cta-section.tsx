@@ -53,7 +53,7 @@ export function CTASection() {
             <Link href="/register">
               <Button
                 size="lg"
-                className="bg-black hover:bg-black/90 text-white font-semibold px-8 py-6 text-lg group"
+                className="bg-black hover:bg-black/90 text-white font-semibold px-8 py-6 text-lg group cursor-pointer"
               >
                 Mulai Gratis
                 <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
@@ -64,7 +64,7 @@ export function CTASection() {
               <Button
                 size="lg"
                 variant="outline"
-                className="border-2 border-black bg-transparent hover:bg-black/10 text-white font-semibold px-8 py-6 text-lg"
+                className="border-2 border-black bg-transparent hover:bg-black/10 text-white font-semibold px-8 py-6 text-lg cursor-pointer"
               >
                 Masuk
               </Button>

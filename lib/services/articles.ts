@@ -8,6 +8,8 @@ export interface GetArticlesParams {
   category?: string;
   status?: string;
   userId?: string;
+  sortBy?: string;
+  sortDirection?: "asc" | "desc";
 }
 
 export interface CreateArticleInput {
@@ -16,7 +18,7 @@ export interface CreateArticleInput {
   content: string;
   thumbnailUrl?: string;
   category?: string;
-  status?: "published" | "draft";
+  status?: string;
 }
 
 export interface UpdateArticleInput extends Partial<CreateArticleInput> {}
@@ -26,19 +28,32 @@ export const articlesService = {
    * Get paginated list of articles
    */
   async getArticles(params: GetArticlesParams = {}): Promise<PaginatedData<ArticleApiResponse>> {
-    const queryString = buildQueryString({
-      page: params.page || 1,
-      perPage: params.perPage || 12,
-      search: params.search,
-      category: params.category,
-      status: params.status,
-      userId: params.userId,
-    });
-    
-    const response = await api.get<PaginatedData<ArticleApiResponse>>(`/articles${queryString}`);
+    const queryParams = new URLSearchParams();
+    if (params.page) queryParams.append("page", params.page.toString());
+    if (params.perPage) queryParams.append("perPage", params.perPage.toString());
+    if (params.search) queryParams.append("search", params.search);
+    if (params.status) queryParams.append("status", params.status);
+    if (params.sortBy) queryParams.append("sort_by", params.sortBy);
+    if (params.sortDirection) queryParams.append("sort_direction", params.sortDirection);
+
+    const response = await api.get<{
+        items: ArticleApiResponse[];
+        total: number;
+        page: number;
+        perPage: number;
+        totalPages: number;
+    }>(`/articles?${queryParams.toString()}`);
     
     if (response.success && response.data) {
-      return response.data;
+        return {
+            items: response.data.items,
+            meta: {
+                current_page: response.data.page,
+                per_page: response.data.perPage,
+                total_items: response.data.total,
+                total_pages: response.data.totalPages,
+            }
+        };
     }
     
     throw new Error(response.message || "Failed to fetch articles");
@@ -99,5 +114,27 @@ export const articlesService = {
    */
   async recordView(id: string): Promise<void> {
     await api.post(`/articles/${id}/view`);
+  },
+
+  /**
+   * Block article (admin only)
+   */
+  async blockArticle(id: string): Promise<void> {
+    const response = await api.post(`/articles/${id}/block`);
+    
+    if (!response.success) {
+      throw new Error(response.message || "Failed to block article");
+    }
+  },
+
+  /**
+   * Unblock article (admin only)
+   */
+  async unblockArticle(id: string): Promise<void> {
+    const response = await api.post(`/articles/${id}/unblock`);
+    
+    if (!response.success) {
+      throw new Error(response.message || "Failed to unblock article");
+    }
   },
 };

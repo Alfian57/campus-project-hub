@@ -39,7 +39,7 @@ export default function NewProjectPage() {
     async function fetchCategories() {
       try {
         const data = await categoriesService.getCategories();
-        setCategories(data);
+        setCategories(data.items);
       } catch (error) {
         console.error("Error fetching categories:", error);
       }

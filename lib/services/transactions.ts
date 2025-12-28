@@ -6,6 +6,10 @@ export interface GetTransactionsParams {
   perPage?: number;
   type?: "all" | "purchases" | "sales";
   status?: string;
+  startDate?: string;
+  endDate?: string;
+  sortBy?: string;
+  sortDirection?: "asc" | "desc";
 }
 
 export const transactionsService = {
@@ -26,17 +30,30 @@ export const transactionsService = {
    * Get user's transactions
    */
   async getTransactions(params: GetTransactionsParams = {}): Promise<PaginatedData<TransactionApiResponse>> {
-    const queryString = buildQueryString({
-      page: params.page || 1,
-      perPage: params.perPage || 12,
-      type: params.type,
-      status: params.status,
-    });
-    
-    const response = await api.get<PaginatedData<TransactionApiResponse>>(`/transactions${queryString}`);
+    const queryParams = new URLSearchParams();
+    if (params.page) queryParams.append("page", params.page.toString());
+    if (params.perPage) queryParams.append("perPage", params.perPage.toString());
+    if (params.type) queryParams.append("type", params.type);
+    if (params.status) queryParams.append("status", params.status);
+
+    const response = await api.get<{
+        items: TransactionApiResponse[];
+        total: number;
+        page: number;
+        perPage: number;
+        totalPages: number;
+    }>(`/transactions?${queryParams.toString()}`);
     
     if (response.success && response.data) {
-      return response.data;
+        return {
+            items: response.data.items,
+            meta: {
+                current_page: response.data.page,
+                per_page: response.data.perPage,
+                total_items: response.data.total,
+                total_pages: response.data.totalPages,
+            }
+        };
     }
     
     throw new Error(response.message || "Failed to fetch transactions");
@@ -59,18 +76,47 @@ export const transactionsService = {
    * Get all transactions (admin only)
    */
   async getAdminTransactions(params: GetTransactionsParams = {}): Promise<PaginatedData<TransactionApiResponse>> {
-    const queryString = buildQueryString({
-      page: params.page || 1,
-      perPage: params.perPage || 12,
-      status: params.status,
-    });
-    
-    const response = await api.get<PaginatedData<TransactionApiResponse>>(`/transactions/admin${queryString}`);
+    const queryParams = new URLSearchParams();
+    if (params.page) queryParams.append("page", params.page.toString());
+    if (params.perPage) queryParams.append("perPage", params.perPage.toString());
+    if (params.status) queryParams.append("status", params.status);
+    if (params.startDate) queryParams.append("start_date", params.startDate);
+    if (params.endDate) queryParams.append("end_date", params.endDate);
+    if (params.sortBy) queryParams.append("sort_by", params.sortBy);
+    if (params.sortDirection) queryParams.append("sort_direction", params.sortDirection);
+
+    const response = await api.get<{
+        items: TransactionApiResponse[];
+        total: number;
+        page: number;
+        perPage: number;
+        totalPages: number;
+    }>(`/transactions/admin?${queryParams.toString()}`);
     
     if (response.success && response.data) {
-      return response.data;
+        return {
+            items: response.data.items,
+            meta: {
+                current_page: response.data.page,
+                per_page: response.data.perPage,
+                total_items: response.data.total,
+                total_pages: response.data.totalPages,
+            }
+        };
     }
     
     throw new Error(response.message || "Failed to fetch transactions");
+  },
+
+  /**
+   * Export transactions to CSV (admin only)
+   */
+  async exportTransactions(params: GetTransactionsParams = {}): Promise<void> {
+    const queryParams = new URLSearchParams();
+    if (params.status) queryParams.append("status", params.status);
+    if (params.startDate) queryParams.append("start_date", params.startDate);
+    if (params.endDate) queryParams.append("end_date", params.endDate);
+
+    await api.download(`/transactions/export?${queryParams.toString()}`, "transactions.csv");
   },
 };

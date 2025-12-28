@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { StatsCard } from "@/components/dashboard/stats-card";
+import { RoleGuard } from "@/components/auth/role-guard";
 import { useAuth } from "@/components/providers/AuthContext";
 import { projectsService } from "@/lib/services/projects";
 import { transactionsService } from "@/lib/services/transactions";
@@ -73,7 +74,7 @@ export default function DashboardPage() {
           .reduce((sum, t) => sum + t.amount, 0);
         
         setStats({
-          totalProjects: projectsData.total,
+          totalProjects: projectsData.meta.total_items,
           totalLikes,
           totalSales,
         });
@@ -100,133 +101,135 @@ export default function DashboardPage() {
   if (!user) return null;
 
   return (
-    <div className="space-y-8">
-      {/* Header */}
-      <div>
-        <h1 className="text-3xl font-bold text-zinc-900 dark:text-zinc-50 mb-2">
-          Selamat Datang, {user.name}! 👋
-        </h1>
-        <p className="text-zinc-600 dark:text-zinc-400">
-          Ini adalah overview dari aktivitas proyek Anda
-        </p>
-      </div>
+    <RoleGuard allowedRoles={["user"]}>
+      <div className="space-y-8">
+        {/* Header */}
+        <div>
+          <h1 className="text-3xl font-bold text-zinc-900 dark:text-zinc-50 mb-2">
+            Selamat Datang, {user.name}! 👋
+          </h1>
+          <p className="text-zinc-600 dark:text-zinc-400">
+            Ini adalah overview dari aktivitas proyek Anda
+          </p>
+        </div>
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <StatsCard
-          title="Total Proyek"
-          value={stats.totalProjects}
-          iconName="FolderKanban"
-          description="Proyek yang telah dibuat"
-          color="blue"
-        />
-        <StatsCard
-          title="Total Suka"
-          value={stats.totalLikes}
-          iconName="Heart"
-          description="Suka dari semua proyek"
-          color="red"
-        />
-        <StatsCard
-          title="Total Penjualan"
-          value={`Rp ${(stats.totalSales / 1000).toFixed(0)}K`}
-          iconName="DollarSign"
-          description="Penjualan yang diterima"
-          color="green"
-        />
-        <StatsCard
-          title="Level"
-          value={user.level || 1}
-          iconName="TrendingUp"
-          description={`${user.totalExp || 0} EXP`}
-          color="purple"
-        />
-      </div>
+        {/* Stats Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <StatsCard
+            title="Total Proyek"
+            value={stats.totalProjects}
+            iconName="FolderKanban"
+            description="Proyek yang telah dibuat"
+            color="blue"
+          />
+          <StatsCard
+            title="Total Suka"
+            value={stats.totalLikes}
+            iconName="Heart"
+            description="Suka dari semua proyek"
+            color="red"
+          />
+          <StatsCard
+            title="Total Penjualan"
+            value={`Rp ${(stats.totalSales / 1000).toFixed(0)}K`}
+            iconName="DollarSign"
+            description="Penjualan yang diterima"
+            color="green"
+          />
+          <StatsCard
+            title="Level"
+            value={user.level || 1}
+            iconName="TrendingUp"
+            description={`${user.totalExp || 0} EXP`}
+            color="purple"
+          />
+        </div>
 
-      {/* Quick Actions */}
-      <div className="flex items-center gap-4">
-        <Link href="/dashboard/projects/new">
-          <Button className="bg-blue-600 hover:bg-blue-700">
-            Unggah Proyek Baru
-          </Button>
-        </Link>
-        <Link href="/dashboard/projects">
-          <Button variant="outline">Kelola Proyek</Button>
-        </Link>
-      </div>
-
-      {/* Recent Projects */}
-      <div>
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl font-bold text-zinc-900 dark:text-zinc-50">
-            Proyek Saya
-          </h2>
-          <Link href="/dashboard/projects">
-            <Button variant="ghost" size="sm">
-              Lihat Semua →
+        {/* Quick Actions */}
+        <div className="flex items-center gap-4">
+          <Link href="/dashboard/projects/new">
+            <Button className="bg-blue-600 hover:bg-blue-700">
+              Unggah Proyek Baru
             </Button>
+          </Link>
+          <Link href="/dashboard/projects">
+            <Button variant="outline">Kelola Proyek</Button>
           </Link>
         </div>
 
-        {projects.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {projects.slice(0, 3).map((project) => (
-              <ProjectCard key={project.id} project={project} />
-            ))}
-          </div>
-        ) : (
-          <div className="text-center py-12 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900">
-            <p className="text-zinc-500 mb-4">
-              Anda belum membuat proyek apapun
-            </p>
-            <Link href="/dashboard/projects/new">
-              <Button className="bg-blue-600 hover:bg-blue-700">
-                Buat Proyek Pertama Anda
+        {/* Recent Projects */}
+        <div>
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-2xl font-bold text-zinc-900 dark:text-zinc-50">
+              Proyek Saya
+            </h2>
+            <Link href="/dashboard/projects">
+              <Button variant="ghost" size="sm">
+                Lihat Semua →
               </Button>
             </Link>
           </div>
-        )}
-      </div>
 
-      {/* Recent Activity */}
-      <div>
-        <h2 className="text-2xl font-bold text-zinc-900 dark:text-zinc-50 mb-6">
-          Aktivitas Terbaru
-        </h2>
-        <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-6">
-          {transactions.length > 0 ? (
-            <div className="space-y-4">
-              {transactions.slice(0, 5).map((transaction) => (
-                <div
-                  key={transaction.id}
-                  className="flex items-center justify-between py-3 border-b border-zinc-100 dark:border-zinc-800 last:border-0"
-                >
-                  <div>
-                    <p className="font-medium text-zinc-900 dark:text-zinc-50">
-                      Pembelian {transaction.status === "success" ? "berhasil" : transaction.status === "pending" ? "pending" : "gagal"}
-                    </p>
-                    <p className="text-sm text-zinc-600 dark:text-zinc-400">
-                      {transaction.buyerName} • {transaction.projectTitle}
-                    </p>
-                  </div>
-                  <div className="text-right">
-                    <p className={`font-semibold ${transaction.status === "success" ? "text-green-600" : "text-zinc-500"}`}>
-                      {transaction.status === "success" ? "+" : ""}Rp {(transaction.amount / 1000).toFixed(0)}K
-                    </p>
-                    <p className="text-xs text-zinc-500">
-                      {new Date(transaction.createdAt).toLocaleDateString("id-ID")}
-                    </p>
-                  </div>
-                </div>
+          {projects.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {projects.slice(0, 3).map((project) => (
+                <ProjectCard key={project.id} project={project} />
               ))}
             </div>
           ) : (
-            <p className="text-center text-zinc-500 py-8">
-              Belum ada aktivitas transaksi
-            </p>
+            <div className="text-center py-12 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900">
+              <p className="text-zinc-500 mb-4">
+                Anda belum membuat proyek apapun
+              </p>
+              <Link href="/dashboard/projects/new">
+                <Button className="bg-blue-600 hover:bg-blue-700">
+                  Buat Proyek Pertama Anda
+                </Button>
+              </Link>
+            </div>
           )}
         </div>
+
+        {/* Recent Activity */}
+        <div>
+          <h2 className="text-2xl font-bold text-zinc-900 dark:text-zinc-50 mb-6">
+            Aktivitas Terbaru
+          </h2>
+          <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-6">
+            {transactions.length > 0 ? (
+              <div className="space-y-4">
+                {transactions.slice(0, 5).map((transaction) => (
+                  <div
+                    key={transaction.id}
+                    className="flex items-center justify-between py-3 border-b border-zinc-100 dark:border-zinc-800 last:border-0"
+                  >
+                    <div>
+                      <p className="font-medium text-zinc-900 dark:text-zinc-50">
+                        Pembelian {transaction.status === "success" ? "berhasil" : transaction.status === "pending" ? "pending" : "gagal"}
+                      </p>
+                      <p className="text-sm text-zinc-600 dark:text-zinc-400">
+                        {transaction.buyerName} • {transaction.projectTitle}
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <p className={`font-semibold ${transaction.status === "success" ? "text-green-600" : "text-zinc-500"}`}>
+                        {transaction.status === "success" ? "+" : ""}Rp {(transaction.amount / 1000).toFixed(0)}K
+                      </p>
+                      <p className="text-xs text-zinc-500">
+                        {new Date(transaction.createdAt).toLocaleDateString("id-ID")}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-center text-zinc-500 py-8">
+                Belum ada aktivitas transaksi
+              </p>
+            )}
+          </div>
+        </div>
       </div>
-    </div>
+    </RoleGuard>
   );
 }

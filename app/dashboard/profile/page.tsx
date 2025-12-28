@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/components/providers/AuthContext";
-import { formatDate, formatCurrency } from "@/lib/utils/format";
+import { formatDate } from "@/lib/utils/format";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { LevelBadge } from "@/components/dashboard/level-badge";
@@ -30,7 +30,12 @@ export default function ProfilePage() {
 
   if (!user) return null;
 
-  const stats = [
+  // Check if user is regular user (not admin or moderator)
+  const isRegularUser = user.role === "user";
+  const canBeBlocked = user.role === "user" || user.role === "moderator";
+
+  // Stats for regular users only
+  const userStats = [
     {
       label: "Total EXP",
       value: (user.totalExp || 0).toLocaleString(),
@@ -43,13 +48,35 @@ export default function ProfilePage() {
       icon: "Trophy",
       color: "text-blue-400",
     },
-    {
+  ];
+
+  // Add status stat only if user can be blocked
+  if (canBeBlocked) {
+    userStats.push({
       label: "Status",
       value: user.status === "active" ? "Aktif" : "Diblokir",
       icon: "Shield",
       color: user.status === "active" ? "text-green-400" : "text-red-400",
+    });
+  }
+
+  // Stats for admin/moderator (minimal stats)
+  const adminStats = [
+    {
+      label: "Role",
+      value: user.role === "admin" ? "Administrator" : "Moderator",
+      icon: "Crown",
+      color: "text-purple-400",
+    },
+    {
+      label: "Status",
+      value: user.status === "active" ? "Aktif" : "-",
+      icon: "Shield",
+      color: "text-green-400",
     },
   ];
+
+  const stats = isRegularUser ? userStats : adminStats;
 
   return (
     <div className="max-w-4xl mx-auto space-y-8">
@@ -93,37 +120,46 @@ export default function ProfilePage() {
             </div>
 
             {/* Name & Role */}
-            <div className="flex-1 space-y-2 pb-2">
+            <div className="flex-1 space-y-2">
               <div className="flex items-center gap-3">
                 <h2 className="text-2xl font-bold text-zinc-50">{user.name}</h2>
-                <LevelBadge totalExp={user.totalExp || 0} />
+                {isRegularUser && <LevelBadge totalExp={user.totalExp || 0} />}
+                {!isRegularUser && (
+                  <span className="px-3 py-1 text-sm font-medium rounded-full bg-purple-500/20 text-purple-400 border border-purple-500/30">
+                    {user.role === "admin" ? "Administrator" : "Moderator"}
+                  </span>
+                )}
               </div>
               <p className="text-zinc-400">{user.email}</p>
-              <div className="flex items-center gap-2 text-sm text-zinc-500">
-                <LucideIcons.GraduationCap className="w-4 h-4" />
-                <span>{user.major || "Belum diisi"} • {user.university || "Belum diisi"}</span>
-              </div>
+              {isRegularUser && (
+                <div className="flex items-center gap-2 text-sm text-zinc-500">
+                  <LucideIcons.GraduationCap className="w-4 h-4" />
+                  <span>{user.major || "Belum diisi"} • {user.university || "Belum diisi"}</span>
+                </div>
+              )}
             </div>
           </div>
         </div>
       </div>
 
-      {/* EXP Progress */}
-      <div className="bg-zinc-900/50 rounded-xl border border-zinc-800 p-6">
-        <div className="flex items-center gap-3 mb-4">
-          <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center">
-            <LucideIcons.Sparkles className="w-5 h-5 text-white" />
+      {/* EXP Progress - Only for regular users */}
+      {isRegularUser && (
+        <div className="bg-zinc-900/50 rounded-xl border border-zinc-800 p-6">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center">
+              <LucideIcons.Sparkles className="w-5 h-5 text-white" />
+            </div>
+            <div>
+              <h3 className="font-semibold text-zinc-100">Experience Points</h3>
+              <p className="text-sm text-zinc-500">Kumpulkan EXP untuk naik level</p>
+            </div>
           </div>
-          <div>
-            <h3 className="font-semibold text-zinc-100">Experience Points</h3>
-            <p className="text-sm text-zinc-500">Kumpulkan EXP untuk naik level</p>
-          </div>
+          <ExpProgress totalExp={user.totalExp || 0} />
         </div>
-        <ExpProgress totalExp={user.totalExp || 0} />
-      </div>
+      )}
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className={`grid grid-cols-1 ${isRegularUser ? 'md:grid-cols-3' : 'md:grid-cols-2'} gap-4`}>
         {stats.map((stat) => {
           const Icon = LucideIcons[stat.icon as keyof typeof LucideIcons] as LucideIcons.LucideIcon;
           return (

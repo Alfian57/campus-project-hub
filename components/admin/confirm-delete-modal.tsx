@@ -8,7 +8,7 @@ import { AlertTriangle } from "lucide-react";
 interface ConfirmDeleteModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onConfirm: () => void;
+  onConfirm: () => Promise<void>;
   title: string;
   itemName: string;
   description?: string;
@@ -26,10 +26,11 @@ export function ConfirmDeleteModal({
 
   const handleConfirm = async () => {
     setIsLoading(true);
-    await new Promise((resolve) => setTimeout(resolve, 500));
-    onConfirm();
-    setIsLoading(false);
-    onClose();
+    try {
+      await onConfirm();
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (

@@ -9,10 +9,12 @@ export interface ApiResponse<T> {
 
 export interface PaginatedData<T> {
   items: T[];
-  total: number;
-  page: number;
-  perPage: number;
-  totalPages: number;
+  meta: {
+    current_page: number;
+    per_page: number;
+    total_items: number;
+    total_pages: number;
+  };
 }
 
 export interface TokenPair {
@@ -82,7 +84,15 @@ export interface ProjectApiResponse {
   status: "published" | "draft" | "blocked";
   author: UserApiResponse;
   categoryId: string | null;
+  category: {
+    id: string;
+    name: string;
+    slug: string;
+    description: string | null;
+    icon: string | null;
+  } | null;
   createdAt: string;
+  updatedAt: string;
 }
 
 // Article types from API
@@ -97,6 +107,7 @@ export interface ArticleApiResponse {
   viewCount: number;
   status: "published" | "draft" | "blocked";
   author: UserApiResponse;
+  publishedAt: string | null;
   createdAt: string;
   updatedAt: string;
 }

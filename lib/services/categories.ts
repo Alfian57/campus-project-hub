@@ -9,17 +9,44 @@ export interface CreateCategoryInput {
 
 export interface UpdateCategoryInput extends Partial<CreateCategoryInput> {}
 
+export interface GetCategoriesParams {
+  page?: number;
+  perPage?: number;
+  search?: string;
+  sortBy?: string;
+  sortDirection?: "asc" | "desc";
+}
+
 export const categoriesService = {
-  /**
-   * Get all categories
-   */
-  async getCategories(): Promise<CategoryApiResponse[]> {
-    const response = await api.get<CategoryApiResponse[]>("/categories");
-    
+  // Get all categories (paginated)
+  async getCategories(params: GetCategoriesParams = {}) {
+    const queryParams = new URLSearchParams();
+    if (params.page) queryParams.append("page", params.page.toString());
+    if (params.perPage) queryParams.append("perPage", params.perPage.toString());
+    if (params.search) queryParams.append("search", params.search);
+    if (params.sortBy) queryParams.append("sort_by", params.sortBy);
+    if (params.sortDirection) queryParams.append("sort_direction", params.sortDirection);
+
+    const response = await api.get<{
+        items: CategoryApiResponse[];
+        total: number;
+        page: number;
+        perPage: number;
+        totalPages: number;
+    }>(`/categories?${queryParams.toString()}`);
+
     if (response.success && response.data) {
-      return response.data;
+        return {
+            items: response.data.items || [],
+            meta: {
+                current_page: response.data.page || 1,
+                per_page: response.data.perPage || 10,
+                total_items: response.data.total || 0,
+                total_pages: response.data.totalPages || 1,
+            }
+        };
     }
-    
+
     throw new Error(response.message || "Failed to fetch categories");
   },
 

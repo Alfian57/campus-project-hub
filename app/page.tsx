@@ -172,7 +172,7 @@ export default async function Home() {
 
           <div className="text-center mt-12">
             <Link href="/projects">
-              <Button size="lg" variant="outline" className="font-semibold border-zinc-700 text-zinc-300 hover:bg-zinc-800 hover:text-white">
+              <Button size="lg" variant="outline" className="font-semibold border-zinc-700 text-zinc-300 hover:bg-zinc-800 hover:text-white cursor-pointer">
                 Lihat Semua Proyek
               </Button>
             </Link>

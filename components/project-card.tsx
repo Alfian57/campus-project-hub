@@ -109,8 +109,8 @@ export function ProjectCard({ project }: ProjectCardProps) {
                   e.stopPropagation();
                   window.open(project.links.github, "_blank", "noopener,noreferrer");
                 }}
-                className="text-zinc-400 hover:text-zinc-100 transition-colors"
                 title="Lihat Kode"
+                className="text-zinc-400 hover:text-zinc-100 transition-colors cursor-pointer"
               >
                 <Github className="w-5 h-5" />
               </button>
@@ -121,8 +121,8 @@ export function ProjectCard({ project }: ProjectCardProps) {
                   e.stopPropagation();
                   window.open(project.links.demo, "_blank", "noopener,noreferrer");
                 }}
-                className="text-zinc-400 hover:text-zinc-100 transition-colors"
                 title="Lihat Demo"
+                className="text-zinc-400 hover:text-zinc-100 transition-colors cursor-pointer"
               >
                 <Globe className="w-5 h-5" />
               </button>

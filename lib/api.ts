@@ -151,6 +151,46 @@ export const api = {
 
   delete: <T>(endpoint: string, options?: RequestInit) =>
     fetchApi<T>(endpoint, { ...options, method: "DELETE" }),
+
+  download: async (endpoint: string, filename: string, options?: RequestInit) => {
+    const url = `${API_BASE_URL}${endpoint}`;
+    const headers: HeadersInit = { ...options?.headers };
+    
+    const token = getAuthToken();
+    if (token) {
+      (headers as Record<string, string>)["Authorization"] = `Bearer ${token}`;
+    }
+
+    try {
+      let response = await fetch(url, { ...options, headers });
+
+      if (response.status === 401 && getRefreshToken()) {
+        const refreshed = await tryRefreshToken();
+        if (refreshed) {
+          const newToken = getAuthToken();
+          if (newToken) {
+             (headers as Record<string, string>)["Authorization"] = `Bearer ${newToken}`;
+          }
+          response = await fetch(url, { ...options, headers });
+        }
+      }
+
+      if (!response.ok) throw new Error("Download failed");
+
+      const blob = await response.blob();
+      const downloadUrl = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = downloadUrl;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(downloadUrl);
+    } catch (error) {
+      console.error("Download error:", error);
+      throw error;
+    }
+  },
 };
 
 // Query string builder

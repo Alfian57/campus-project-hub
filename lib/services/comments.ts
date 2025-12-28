@@ -20,10 +20,24 @@ export const commentsService = {
       perPage: params.perPage || 20,
     });
     
-    const response = await api.get<PaginatedData<CommentApiResponse>>(`/projects/${projectId}/comments${queryString}`);
+    const response = await api.get<{
+        items: CommentApiResponse[];
+        total: number;
+        page: number;
+        perPage: number;
+        totalPages: number;
+    }>(`/projects/${projectId}/comments${queryString}`);
     
     if (response.success && response.data) {
-      return response.data;
+        return {
+            items: response.data.items,
+            meta: {
+                current_page: response.data.page,
+                per_page: response.data.perPage,
+                total_items: response.data.total,
+                total_pages: response.data.totalPages,
+            }
+        };
     }
     
     throw new Error(response.message || "Failed to fetch comments");

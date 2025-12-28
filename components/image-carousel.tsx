@@ -97,7 +97,7 @@ export function ImageCarousel({ images, alt }: ImageCarouselProps) {
             key={index}
             onClick={() => goToSlide(index)}
             className={cn(
-              "w-2.5 h-2.5 rounded-full transition-all duration-200",
+              "w-2.5 h-2.5 rounded-full transition-all duration-200 cursor-pointer",
               index === currentIndex
                 ? "bg-blue-500 scale-110"
                 : "bg-zinc-600 hover:bg-zinc-500"
@@ -115,7 +115,7 @@ export function ImageCarousel({ images, alt }: ImageCarouselProps) {
               key={index}
               onClick={() => goToSlide(index)}
               className={cn(
-                "relative w-20 h-14 flex-shrink-0 rounded-lg overflow-hidden border-2 transition-all",
+                "relative w-20 h-14 flex-shrink-0 rounded-lg overflow-hidden border-2 transition-all cursor-pointer",
                 index === currentIndex
                   ? "border-blue-500 ring-2 ring-blue-500/30"
                   : "border-zinc-700 hover:border-zinc-500"

@@ -14,7 +14,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Edit, Trash2, Plus, Loader2 } from "lucide-react";
+import { Edit, Trash2, Plus, Loader2, ArrowUpDown, Search } from "lucide-react";
 import { toast } from "sonner";
 import {
   Dialog,
@@ -28,27 +28,61 @@ import { Label } from "@/components/ui/label";
 import { ConfirmDeleteModal } from "@/components/admin/confirm-delete-modal";
 import { formatDate } from "@/lib/utils/format";
 
-export default function CategoriesManagementPage() {
+export default function AdminCategoriesPage() {
   const [categories, setCategories] = useState<CategoryApiResponse[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState("");
+  
+  // Modal states
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState<CategoryApiResponse | null>(null);
   const [categoryToDelete, setCategoryToDelete] = useState<CategoryApiResponse | null>(null);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  
+  // Pagination & Sort state
+  const [pagination, setPagination] = useState({
+    page: 1,
+    perPage: 10,
+    totalItems: 0,
+    totalPages: 1,
+  });
+  const [sortConfig, setSortConfig] = useState<{ key: string; direction: "asc" | "desc" } | null>(null);
+
   const [formData, setFormData] = useState({
     name: "",
     description: "",
     color: "blue",
   });
 
+  // Debounce search
+  useEffect(() => {
+    const timer = setTimeout(() => {
+        setPagination(prev => ({ ...prev, page: 1 }));
+        fetchCategories();
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
   useEffect(() => {
     fetchCategories();
-  }, []);
+  }, [pagination.page, pagination.perPage, sortConfig]);
 
   const fetchCategories = async () => {
+    setIsLoading(true);
     try {
-      const data = await categoriesService.getCategories();
-      setCategories(data);
+      const data = await categoriesService.getCategories({
+        page: pagination.page,
+        perPage: pagination.perPage,
+        search: searchQuery,
+        sortBy: sortConfig?.key,
+        sortDirection: sortConfig?.direction,
+      });
+      setCategories(data.items);
+      setPagination(prev => ({
+        ...prev,
+        totalItems: data.meta.total_items,
+        totalPages: data.meta.total_pages,
+      }));
     } catch (error) {
       console.error("Error fetching categories:", error);
       toast.error("Gagal memuat kategori");
@@ -64,15 +98,15 @@ export default function CategoriesManagementPage() {
     }
 
     try {
-      const newCategory = await categoriesService.createCategory({
+      await categoriesService.createCategory({
         name: formData.name,
         description: formData.description,
         color: formData.color,
       });
-      setCategories((prev) => [...prev, newCategory]);
       toast.success(`Kategori "${formData.name}" berhasil dibuat`);
       setFormData({ name: "", description: "", color: "blue" });
       setIsCreateModalOpen(false);
+      fetchCategories();
     } catch (error) {
       console.error("Error creating category:", error);
       toast.error("Gagal membuat kategori");
@@ -83,26 +117,19 @@ export default function CategoriesManagementPage() {
     if (!editingCategory || !formData.name.trim()) return;
 
     try {
-      const updated = await categoriesService.updateCategory(editingCategory.id, {
+      await categoriesService.updateCategory(editingCategory.id, {
         name: formData.name,
         description: formData.description,
         color: formData.color,
       });
-      setCategories((prev) =>
-        prev.map((cat) => (cat.id === editingCategory.id ? updated : cat))
-      );
       toast.success(`Kategori "${formData.name}" berhasil diperbarui`);
       setEditingCategory(null);
       setFormData({ name: "", description: "", color: "blue" });
+      fetchCategories();
     } catch (error) {
       console.error("Error updating category:", error);
       toast.error("Gagal memperbarui kategori");
     }
-  };
-
-  const openDeleteModal = (category: CategoryApiResponse) => {
-    setCategoryToDelete(category);
-    setIsDeleteModalOpen(true);
   };
 
   const handleDelete = async () => {
@@ -110,8 +137,9 @@ export default function CategoriesManagementPage() {
     
     try {
       await categoriesService.deleteCategory(categoryToDelete.id);
-      setCategories((prev) => prev.filter((cat) => cat.id !== categoryToDelete.id));
       toast.success(`Kategori "${categoryToDelete.name}" berhasil dihapus`);
+      setIsDeleteModalOpen(false);
+      fetchCategories();
     } catch (error) {
       console.error("Error deleting category:", error);
       toast.error("Gagal menghapus kategori");
@@ -125,6 +153,32 @@ export default function CategoriesManagementPage() {
       description: category.description || "",
       color: category.color || "blue",
     });
+  };
+
+  const openDeleteModal = (category: CategoryApiResponse) => {
+    setCategoryToDelete(category);
+    setIsDeleteModalOpen(true);
+  };
+
+  const handleSort = (key: string) => {
+    if (key !== "nama" && key !== "dibuat") return;
+    
+    let direction: "asc" | "desc" = "asc";
+    if (sortConfig && sortConfig.key === key && sortConfig.direction === "asc") {
+        direction = "desc";
+    }
+    setSortConfig({ key, direction });
+    setPagination(prev => ({ ...prev, page: 1 }));
+  };
+
+  const getSortIcon = (key: string) => {
+    if (sortConfig?.key === key) {
+        return <ArrowUpDown className={`w-4 h-4 ml-1 inline ${sortConfig.direction === 'asc' ? 'text-blue-500' : 'text-blue-500'}`} />
+    }
+    if (key === "nama" || key === "dibuat") {
+        return <ArrowUpDown className="w-4 h-4 ml-1 inline text-zinc-400 opacity-0 group-hover:opacity-100 transition-opacity" />
+    }
+    return null;
   };
 
   const colorOptions = [
@@ -146,8 +200,7 @@ export default function CategoriesManagementPage() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex justify-between items-start">
         <div>
           <h1 className="text-3xl font-bold text-zinc-900 dark:text-zinc-50">
             Manajemen Kategori
@@ -157,7 +210,7 @@ export default function CategoriesManagementPage() {
           </p>
         </div>
         <Button
-          className="bg-blue-600 hover:bg-blue-700"
+          className="bg-blue-600 hover:bg-blue-700 cursor-pointer"
           onClick={() => setIsCreateModalOpen(true)}
         >
           <Plus className="w-4 h-4 mr-2" />
@@ -165,32 +218,37 @@ export default function CategoriesManagementPage() {
         </Button>
       </div>
 
-      {/* Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="p-4 rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900">
-          <p className="text-sm text-zinc-600 dark:text-zinc-400">Total Kategori</p>
-          <p className="text-2xl font-bold text-zinc-900 dark:text-zinc-50">
-            {categories.length}
-          </p>
-        </div>
-        <div className="p-4 rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900">
-          <p className="text-sm text-zinc-600 dark:text-zinc-400">Total Proyek</p>
-          <p className="text-2xl font-bold text-blue-600">
-            {categories.reduce((sum, cat) => sum + (cat.projectCount || 0), 0)}
-          </p>
+       <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
+        <div className="relative flex-1 w-full md:max-w-md">
+           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500" />
+           <Input
+             placeholder="Cari kategori..."
+             value={searchQuery}
+             onChange={(e) => setSearchQuery(e.target.value)}
+             className="pl-10"
+           />
         </div>
       </div>
 
-      {/* Categories Table */}
       <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 overflow-hidden">
         <Table>
           <TableHeader>
             <TableRow>
               <TableHead>Warna</TableHead>
-              <TableHead>Nama</TableHead>
+              <TableHead 
+                className="cursor-pointer group select-none"
+                onClick={() => handleSort("nama")}
+              >
+                Nama {getSortIcon("nama")}
+              </TableHead>
               <TableHead>Deskripsi</TableHead>
               <TableHead>Proyek</TableHead>
-              <TableHead>Dibuat</TableHead>
+              <TableHead 
+                className="cursor-pointer group select-none"
+                onClick={() => handleSort("dibuat")}
+              >
+                Dibuat {getSortIcon("dibuat")}
+              </TableHead>
               <TableHead className="text-right">Aksi</TableHead>
             </TableRow>
           </TableHeader>
@@ -240,6 +298,51 @@ export default function CategoriesManagementPage() {
             ))}
           </TableBody>
         </Table>
+      </div>
+
+      {/* Pagination Controls */}
+      <div className="flex items-center justify-between border-t pt-4">
+        <div className="flex items-center gap-2">
+            <span className="text-sm text-zinc-600">Baris per halaman:</span>
+            <div className="relative">
+                <select
+                    className="h-9 w-[70px] rounded-md border border-zinc-200 bg-white px-2 py-1 text-sm ring-offset-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-950 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 dark:border-zinc-800 dark:bg-zinc-950 dark:ring-offset-zinc-950 dark:focus-visible:ring-zinc-300 cursor-pointer appearance-none"
+                    value={pagination.perPage}
+                    onChange={(e) => setPagination(prev => ({ ...prev, perPage: Number(e.target.value), page: 1 }))}
+                >
+                    <option value="10">10</option>
+                    <option value="20">20</option>
+                    <option value="50">50</option>
+                    <option value="100">100</option>
+                </select>
+            </div>
+        </div>
+        
+        <div className="flex items-center gap-2">
+            <span className="text-sm text-zinc-600">
+                Halaman {pagination.page} dari {pagination.totalPages}
+            </span>
+            <div className="flex gap-1">
+                <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setPagination(prev => ({ ...prev, page: prev.page - 1 }))}
+                    disabled={pagination.page <= 1}
+                    className="cursor-pointer"
+                >
+                    Prev
+                </Button>
+                <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setPagination(prev => ({ ...prev, page: prev.page + 1 }))}
+                    disabled={pagination.page >= pagination.totalPages}
+                    className="cursor-pointer"
+                >
+                    Next
+                </Button>
+            </div>
+        </div>
       </div>
 
       {/* Create/Edit Modal */}

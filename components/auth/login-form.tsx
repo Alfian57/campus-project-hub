@@ -42,9 +42,17 @@ export function LoginForm() {
   const onSubmit = async (data: LoginFormData) => {
     setIsLoading(true);
     try {
-      await login(data);
+      const user = await login(data);
       toast.success("Login berhasil! Selamat datang kembali.");
-      router.push("/dashboard");
+      
+      // Redirect based on role
+      if (user.role === "admin") {
+        router.push("/dashboard/admin");
+      } else if (user.role === "moderator") {
+        router.push("/dashboard/moderator");
+      } else {
+        router.push("/dashboard");
+      }
     } catch (error) {
       if (error instanceof ApiError) {
         if (error.errors) {
@@ -102,9 +110,9 @@ export function LoginForm() {
               className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-200"
             >
               {showPassword ? (
-                <EyeOff className="w-4 h-4" />
+                <EyeOff className="w-4 h-4 cursor-pointer" />
               ) : (
-                <Eye className="w-4 h-4" />
+                <Eye className="w-4 h-4 cursor-pointer" />
               )}
             </button>
           </div>
@@ -117,7 +125,7 @@ export function LoginForm() {
         <div className="flex justify-end">
           <Link
             href="/reset-password"
-            className="text-sm text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
+            className="text-sm text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300  cursor-pointer"
           >
             Lupa password?
           </Link>
@@ -127,7 +135,7 @@ export function LoginForm() {
         <Button
           type="submit"
           disabled={isLoading}
-          className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+          className="w-full bg-blue-600 hover:bg-blue-700 text-white cursor-pointer"
           size="lg"
         >
           {isLoading ? (
@@ -160,6 +168,7 @@ export function LoginForm() {
           variant="outline"
           onClick={() => handleSocialLogin("google")}
           disabled={isLoading}
+          className="cursor-pointer"
         >
           <Mail className="w-4 h-4 mr-2" />
           Google
@@ -169,6 +178,7 @@ export function LoginForm() {
           variant="outline"
           onClick={() => handleSocialLogin("github")}
           disabled={isLoading}
+          className="cursor-pointer"
         >
           <Github className="w-4 h-4 mr-2" />
           GitHub

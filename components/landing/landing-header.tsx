@@ -86,13 +86,13 @@ export function LandingHeader({ showArticlesActive = false, activePage }: Landin
                 <Link href="/login" className="hidden sm:block">
                   <Button
                     variant="ghost"
-                    className="text-zinc-300 hover:text-white hover:bg-zinc-800"
+                    className="text-zinc-300 hover:text-white hover:bg-zinc-800 cursor-pointer"
                   >
                     Masuk
                   </Button>
                 </Link>
                 <Link href="/register">
-                  <Button className="bg-blue-600 hover:bg-blue-700 text-white">
+                  <Button className="bg-blue-600 hover:bg-blue-700 text-white cursor-pointer">
                     Daftar Gratis
                   </Button>
                 </Link>

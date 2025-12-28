@@ -36,7 +36,6 @@ export function BlockProjectModal({
     await new Promise((resolve) => setTimeout(resolve, 1000));
     
     onBlock(projectId, reason);
-    toast.success(`Proyek "${projectTitle}" telah diblokir`);
     
     setIsLoading(false);
     setReason("");

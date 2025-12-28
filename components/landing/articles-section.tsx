@@ -112,7 +112,7 @@ export function ArticlesSection() {
             <Button
               size="lg"
               variant="outline"
-              className="font-semibold border-zinc-700 text-zinc-300 hover:bg-zinc-800 hover:text-white group"
+              className="font-semibold border-zinc-700 text-zinc-300 hover:bg-zinc-800 hover:text-white group cursor-pointer"
             >
               Lihat Semua Artikel
               <ArrowRight className="ml-2 w-4 h-4 transition-transform group-hover:translate-x-1" />
