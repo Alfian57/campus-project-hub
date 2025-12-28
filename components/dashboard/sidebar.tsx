@@ -86,6 +86,11 @@ export function Sidebar({ role = "user" }: SidebarProps) {
       label: "Transaksi",
       iconName: "DollarSign",
     },
+    {
+      href: "/dashboard/admin/settings",
+      label: "Pengaturan",
+      iconName: "Settings",
+    },
   ];
 
   // =========================================

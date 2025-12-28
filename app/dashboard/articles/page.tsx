@@ -12,6 +12,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { ContentStatusBadge, Pagination } from "@/components/shared";
 import { Edit, Trash2, Eye, Loader2, Search, Filter, FileText, Plus, Lightbulb } from "lucide-react";
 import Link from "next/link";
 import { useAuth } from "@/components/providers/AuthContext";
@@ -242,17 +243,7 @@ export default function UserArticlesPage() {
                     </div>
                   </TableCell>
                   <TableCell>
-                    <Badge 
-                      className={
-                        article.status === "published" 
-                          ? "bg-green-100 text-green-700 dark:bg-green-900/20 dark:text-green-400"
-                          : article.status === "blocked"
-                          ? "bg-red-100 text-red-700 dark:bg-red-900/20 dark:text-red-400"
-                          : "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/20 dark:text-yellow-400"
-                      }
-                    >
-                      {article.status === "published" ? "Terbit" : article.status === "blocked" ? "Diblokir" : "Draft"}
-                    </Badge>
+                    <ContentStatusBadge status={article.status} />
                   </TableCell>
                   <TableCell className="text-right">
                     <div className="flex items-center justify-end gap-2">

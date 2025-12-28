@@ -12,6 +12,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { ContentStatusBadge, Pagination } from "@/components/shared";
 import { Edit, Trash2, Eye, Loader2, Search, ArrowUpDown, Filter, FolderKanban, Heart, Plus, Lightbulb } from "lucide-react";
 import Link from "next/link";
 import { useAuth } from "@/components/providers/AuthContext";
@@ -329,17 +330,7 @@ export default function MyProjectsPage() {
                     </div>
                   </TableCell>
                   <TableCell>
-                    <Badge 
-                      className={
-                        project.status === "published" 
-                          ? "bg-green-100 text-green-700 dark:bg-green-900/20 dark:text-green-400"
-                          : project.status === "blocked"
-                          ? "bg-red-100 text-red-700 dark:bg-red-900/20 dark:text-red-400"
-                          : "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/20 dark:text-yellow-400"
-                      }
-                    >
-                      {project.status === "published" ? "Terpublikasi" : project.status === "blocked" ? "Diblokir" : "Draft"}
-                    </Badge>
+                    <ContentStatusBadge status={project.status} />
                   </TableCell>
                   <TableCell className="text-right">
                     <div className="flex items-center justify-end gap-2">

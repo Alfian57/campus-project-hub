@@ -12,8 +12,8 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { ContentStatusBadge, Pagination } from "@/components/shared";
 import { toast } from "sonner";
 import { Search, Loader2, Trash2, Eye, ArrowUpDown, Filter, Ban, CheckCircle } from "lucide-react";
 import { formatDate } from "@/lib/utils/format";
@@ -253,17 +253,7 @@ export default function AdminArticlesPage() {
                   </div>
                 </TableCell>
                 <TableCell>
-                  <Badge
-                    className={
-                      article.status === "published"
-                        ? "bg-green-100 text-green-700 dark:bg-green-900/20 dark:text-green-400"
-                        : article.status === "blocked"
-                        ? "bg-red-100 text-red-700 dark:bg-red-900/20 dark:text-red-400"
-                        : "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/20 dark:text-yellow-400"
-                    }
-                  >
-                    {article.status === "published" ? "Terpublikasi" : article.status === "blocked" ? "Diblokir" : "Draft"}
-                  </Badge>
+                  <ContentStatusBadge status={article.status} />
                 </TableCell>
                 <TableCell>
                    <div className="flex items-center gap-1 text-zinc-500">
@@ -325,50 +315,14 @@ export default function AdminArticlesPage() {
         </div>
       )}
 
-      {/* Pagination Controls */}
-      <div className="flex items-center justify-between border-t pt-4">
-        <div className="flex items-center gap-2">
-            <span className="text-sm text-zinc-600">Baris per halaman:</span>
-            <div className="relative">
-                <select
-                    className="h-9 w-[70px] rounded-md border border-zinc-200 bg-white px-2 py-1 text-sm ring-offset-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-950 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 dark:border-zinc-800 dark:bg-zinc-950 dark:ring-offset-zinc-950 dark:focus-visible:ring-zinc-300 cursor-pointer appearance-none"
-                    value={pagination.perPage}
-                    onChange={(e) => setPagination(prev => ({ ...prev, perPage: Number(e.target.value), page: 1 }))}
-                >
-                    <option value="10">10</option>
-                    <option value="20">20</option>
-                    <option value="50">50</option>
-                    <option value="100">100</option>
-                </select>
-            </div>
-        </div>
-        
-        <div className="flex items-center gap-2">
-            <span className="text-sm text-zinc-600">
-                Halaman {pagination.page} dari {pagination.totalPages}
-            </span>
-            <div className="flex gap-1">
-                <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setPagination(prev => ({ ...prev, page: prev.page - 1 }))}
-                    disabled={pagination.page <= 1}
-                    className="cursor-pointer"
-                >
-                    Prev
-                </Button>
-                <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setPagination(prev => ({ ...prev, page: prev.page + 1 }))}
-                    disabled={pagination.page >= pagination.totalPages}
-                    className="cursor-pointer"
-                >
-                    Next
-                </Button>
-            </div>
-        </div>
-      </div>
+      {/* Pagination */}
+      <Pagination
+        currentPage={pagination.page}
+        totalPages={pagination.totalPages}
+        totalItems={pagination.totalItems}
+        itemsPerPage={pagination.perPage}
+        onPageChange={(page) => setPagination(prev => ({ ...prev, page }))}
+      />
 
       {articleToDelete && (
         <ConfirmDeleteModal

@@ -14,13 +14,13 @@ export interface ConfigurationMap {
 
 export const configurationService = {
   getPublicConfigurations: async (): Promise<ConfigurationMap> => {
-    const response = await api.get("/configurations");
-    return (response.data as { data: ConfigurationMap }).data;
+    const response = await api.get<ConfigurationMap>("/configurations");
+    return response.data || {};
   },
 
   getAllConfigurations: async (): Promise<Configuration[]> => {
-    const response = await api.get("/admin/configurations");
-    return (response.data as { data: Configuration[] }).data;
+    const response = await api.get<Configuration[]>("/admin/configurations");
+    return response.data || [];
   },
 
   updateConfigurations: async (configs: ConfigurationMap): Promise<void> => {

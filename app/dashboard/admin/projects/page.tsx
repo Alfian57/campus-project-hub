@@ -15,6 +15,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { ContentStatusBadge, Pagination } from "@/components/shared";
 import { Ban, CheckCircle, Eye, Trash2, Search, Loader2, ArrowUpDown, Filter } from "lucide-react";
 import { toast } from "sonner";
 import Link from "next/link";
@@ -311,15 +312,7 @@ export default function ProjectsManagementPage() {
                 </TableCell>
                 <TableCell>{project.stats?.commentCount || 0}</TableCell>
                 <TableCell>
-                  <Badge
-                    className={
-                      project.status === "published"
-                        ? "bg-green-100 text-green-700 dark:bg-green-900/20 dark:text-green-400"
-                        : "bg-red-100 text-red-700 dark:bg-red-900/20 dark:text-red-400"
-                    }
-                  >
-                    {project.status === "published" ? "Terpublikasi" : "Diblokir"}
-                  </Badge>
+                  <ContentStatusBadge status={project.status} />
                 </TableCell>
                 <TableCell>
                   <div className="flex items-center justify-end gap-2">
@@ -369,50 +362,14 @@ export default function ProjectsManagementPage() {
         </div>
       )}
 
-      {/* Pagination Controls */}
-      <div className="flex items-center justify-between border-t pt-4">
-        <div className="flex items-center gap-2">
-            <span className="text-sm text-zinc-600">Baris per halaman:</span>
-            <div className="relative">
-                <select
-                    className="h-9 w-[70px] rounded-md border border-zinc-200 bg-white px-2 py-1 text-sm ring-offset-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-950 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 dark:border-zinc-800 dark:bg-zinc-950 dark:ring-offset-zinc-950 dark:focus-visible:ring-zinc-300 cursor-pointer appearance-none"
-                    value={pagination.perPage}
-                    onChange={(e) => setPagination(prev => ({ ...prev, perPage: Number(e.target.value), page: 1 }))}
-                >
-                    <option value="10">10</option>
-                    <option value="20">20</option>
-                    <option value="50">50</option>
-                    <option value="100">100</option>
-                </select>
-            </div>
-        </div>
-        
-        <div className="flex items-center gap-2">
-            <span className="text-sm text-zinc-600">
-                Halaman {pagination.page} dari {pagination.totalPages}
-            </span>
-            <div className="flex gap-1">
-                <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setPagination(prev => ({ ...prev, page: prev.page - 1 }))}
-                    disabled={pagination.page <= 1}
-                    className="cursor-pointer"
-                >
-                    Prev
-                </Button>
-                <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setPagination(prev => ({ ...prev, page: prev.page + 1 }))}
-                    disabled={pagination.page >= pagination.totalPages}
-                    className="cursor-pointer"
-                >
-                    Next
-                </Button>
-            </div>
-        </div>
-      </div>
+      {/* Pagination */}
+      <Pagination
+        currentPage={pagination.page}
+        totalPages={pagination.totalPages}
+        totalItems={pagination.totalItems}
+        itemsPerPage={pagination.perPage}
+        onPageChange={(page) => setPagination(prev => ({ ...prev, page }))}
+      />
 
       {/* Modals */}
       {selectedProject && (
