@@ -1,7 +1,19 @@
 import { ArticlesClientPage } from "@/components/articles-client-page";
 import { ArticleApiResponse } from "@/types/api";
+import { Metadata } from "next";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/v1";
+
+export const metadata: Metadata = {
+  title: "Artikel & Wawasan",
+  description:
+    "Baca artikel terbaru tentang teknologi, pengembangan karir, dan tips sukses untuk mahasiswa dari komunitas Campus Project Hub.",
+  openGraph: {
+    title: "Artikel & Wawasan - Campus Project Hub",
+    description:
+      "Baca artikel terbaru tentang teknologi, pengembangan karir, dan tips sukses untuk mahasiswa.",
+  },
+};
 
 async function getArticles(): Promise<ArticleApiResponse[]> {
   try {

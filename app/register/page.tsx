@@ -1,6 +1,17 @@
 import { RegisterForm } from "@/components/auth/register-form";
 import { Sparkles } from "lucide-react";
 import Link from "next/link";
+import { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Daftar",
+  description:
+    "Daftar akun baru di Campus Project Hub dan bergabung dengan ribuan mahasiswa berbakat untuk memamerkan proyek inovatif Anda.",
+  robots: {
+    index: false,
+    follow: true,
+  },
+};
 
 export default function RegisterPage() {
   return (

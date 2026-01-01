@@ -9,8 +9,10 @@ import { Eye, Heart, ArrowLeft, Crown } from "lucide-react";
 import Link from "next/link";
 import { ProjectApiResponse, CommentApiResponse } from "@/types/api";
 import { getAssetUrl } from "@/lib/env";
+import { Metadata } from "next";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/v1";
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://campushub.id";
 
 async function getProject(id: string): Promise<ProjectApiResponse | null> {
   try {
@@ -46,6 +48,59 @@ async function getComments(projectId: string): Promise<CommentApiResponse[]> {
 
 interface ProjectPageProps {
   params: Promise<{ id: string }>;
+}
+
+// Dynamic metadata for SEO
+export async function generateMetadata({ params }: ProjectPageProps): Promise<Metadata> {
+  const { id } = await params;
+  const project = await getProject(id);
+
+  if (!project) {
+    return {
+      title: "Proyek Tidak Ditemukan",
+      description: "Proyek yang Anda cari tidak ditemukan.",
+    };
+  }
+
+  const description = project.description?.slice(0, 160) || 
+    `Lihat proyek ${project.title} oleh ${project.author.name} di Campus Project Hub`;
+  
+  const imageUrl = project.thumbnailUrl 
+    ? getAssetUrl(project.thumbnailUrl) 
+    : `${SITE_URL}/og-image.png`;
+
+  return {
+    title: project.title,
+    description,
+    keywords: [
+      project.title,
+      project.author.name,
+      ...(project.techStack || []),
+      "proyek mahasiswa",
+      "campus project hub",
+    ],
+    openGraph: {
+      type: "article",
+      title: project.title,
+      description,
+      url: `${SITE_URL}/project/${id}`,
+      images: [
+        {
+          url: imageUrl || "",
+          width: 1200,
+          height: 630,
+          alt: project.title,
+        },
+      ],
+      authors: [project.author.name],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: project.title,
+      description,
+      images: [imageUrl || ""],
+    },
+  };
 }
 
 export default async function ProjectPage({ params }: ProjectPageProps) {

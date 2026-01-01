@@ -51,6 +51,60 @@ interface ArticleDetailPageProps {
   params: Promise<{ id: string }>;
 }
 
+import { Metadata } from "next";
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://campushub.id";
+
+// Dynamic metadata for SEO
+export async function generateMetadata({ params }: ArticleDetailPageProps): Promise<Metadata> {
+  const { id } = await params;
+  const article = await getArticle(id);
+
+  if (!article) {
+    return {
+      title: "Artikel Tidak Ditemukan",
+      description: "Artikel yang Anda cari tidak ditemukan.",
+    };
+  }
+
+  const description = article.excerpt || article.content.slice(0, 160);
+  const imageUrl = article.thumbnailUrl 
+    ? getAssetUrl(article.thumbnailUrl) 
+    : `${SITE_URL}/og-image.png`;
+
+  return {
+    title: article.title,
+    description,
+    keywords: [
+      article.title,
+      article.category || "Artikel",
+      "campus hub articles",
+      "tips mahasiswa",
+    ],
+    openGraph: {
+      type: "article",
+      title: article.title,
+      description,
+      url: `${SITE_URL}/articles/${id}`,
+      images: [
+        {
+          url: imageUrl || "",
+          width: 1200,
+          height: 630,
+          alt: article.title,
+        },
+      ],
+      authors: [article.author.name],
+      publishedTime: article.createdAt,
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: article.title,
+      description,
+      images: [imageUrl || ""],
+    },
+  };
+}
+
 export default async function ArticleDetailPage({ params }: ArticleDetailPageProps) {
   const { id } = await params;
   const apiArticle = await getArticle(id);

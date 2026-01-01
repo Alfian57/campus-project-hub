@@ -4,6 +4,18 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Users, Target, Zap, Heart } from "lucide-react";
 import Image from "next/image";
+import { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Tentang Kami",
+  description:
+    "Pelajari misi dan visi Campus Project Hub - platform yang menghubungkan mahasiswa berbakat dengan peluang untuk memamerkan, berbagi, dan mengembangkan karya mereka.",
+  openGraph: {
+    title: "Tentang Campus Project Hub",
+    description:
+      "Platform yang menghubungkan mahasiswa berbakat dengan peluang untuk memamerkan dan mengembangkan karya mereka.",
+  },
+};
 
 export default function AboutPage() {
   return (

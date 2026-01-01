@@ -1,6 +1,17 @@
 import { LoginForm } from "@/components/auth/login-form";
 import { Sparkles } from "lucide-react";
 import Link from "next/link";
+import { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Masuk",
+  description:
+    "Masuk ke akun Campus Project Hub Anda untuk melanjutkan ke dashboard dan mengelola proyek Anda.",
+  robots: {
+    index: false,
+    follow: true,
+  },
+};
 
 export default function LoginPage() {
   return (

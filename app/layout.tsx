@@ -17,10 +17,83 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://campushub.id";
+
 export const metadata: Metadata = {
-  title: "Campus Project Hub - Pamerkan Karya Anda",
+  metadataBase: new URL(siteUrl),
+  title: {
+    default: "Campus Project Hub - Platform Showcase Proyek Mahasiswa Indonesia",
+    template: "%s | Campus Project Hub",
+  },
   description:
-    "Platform untuk mahasiswa memamerkan proyek, menerima feedback, dan mendapat dukungan dari komunitas.",
+    "Platform terbesar untuk mahasiswa Indonesia memamerkan proyek inovatif, menerima feedback berkualitas, dan mendapat dukungan finansial dari komunitas. Bergabung dengan ribuan mahasiswa berbakat!",
+  keywords: [
+    "proyek mahasiswa",
+    "showcase proyek",
+    "portofolio mahasiswa",
+    "campus hub",
+    "proyek kampus",
+    "teknologi mahasiswa",
+    "startup mahasiswa",
+    "karya mahasiswa",
+    "inovasi kampus",
+    "coding project",
+    "web development",
+    "mobile app",
+    "machine learning",
+    "Indonesia",
+  ],
+  authors: [{ name: "Campus Project Hub Team" }],
+  creator: "Campus Project Hub",
+  publisher: "Campus Project Hub",
+  formatDetection: {
+    email: false,
+    address: false,
+    telephone: false,
+  },
+  openGraph: {
+    type: "website",
+    locale: "id_ID",
+    url: siteUrl,
+    siteName: "Campus Project Hub",
+    title: "Campus Project Hub - Platform Showcase Proyek Mahasiswa Indonesia",
+    description:
+      "Platform terbesar untuk mahasiswa Indonesia memamerkan proyek inovatif, menerima feedback berkualitas, dan mendapat dukungan finansial dari komunitas.",
+    images: [
+      {
+        url: "/og-image.png",
+        width: 1200,
+        height: 630,
+        alt: "Campus Project Hub - Tempat Kreativitas Mahasiswa Bersinar",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Campus Project Hub - Platform Showcase Proyek Mahasiswa Indonesia",
+    description:
+      "Platform terbesar untuk mahasiswa Indonesia memamerkan proyek inovatif dan mendapat dukungan dari komunitas.",
+    images: ["/og-image.png"],
+    creator: "@campushub_id",
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-video-preview": -1,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+    },
+  },
+  verification: {
+    google: process.env.GOOGLE_SITE_VERIFICATION,
+  },
+  alternates: {
+    canonical: siteUrl,
+  },
+  category: "technology",
 };
 
 export default function RootLayout({
