@@ -1,6 +1,9 @@
 # Build stage
 FROM node:20-alpine AS builder
 
+# Build arguments for environment variables that need to be baked in
+ARG NEXT_PUBLIC_API_URL
+
 WORKDIR /app
 
 # Copy package files
@@ -14,6 +17,8 @@ COPY . .
 
 # Build the application
 ENV NEXT_TELEMETRY_DISABLED=1
+# Pass build argument to environment so Next.js can use it during build
+ENV NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
 RUN npm run build
 
 # Production stage
